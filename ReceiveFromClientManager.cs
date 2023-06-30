@@ -32,7 +32,7 @@ namespace FileSystemRelay {
                                     Stopwatch stopwatch = new Stopwatch();
                                     stopwatch.Start();
                                     // Wait for the file to exist, probably not uploaded or still uploading.
-                                    while (!fileManager.Files.ContainsKey(hash) && stopwatch.ElapsedMilliseconds < 5000) {
+                                    while (!fileManager.Files.ContainsKey(hash) && stopwatch.ElapsedMilliseconds < 10000) {
                                         Thread.Sleep(1000);
                                     }
 
