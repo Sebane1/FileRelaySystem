@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
+using System.Numerics;
 
 namespace FileSystemRelay {
     public class FileIdentifier : IDisposable {
         string identifier;
         MemoryStream memoryStream;
         bool inUse;
+        Vector3 position;
         public event EventHandler OnDisposed;
         public FileIdentifier(string identifier, MemoryStream memoryStream) {
             this.identifier = identifier;
@@ -17,6 +17,7 @@ namespace FileSystemRelay {
         public MemoryStream MemoryStream { get => memoryStream; set => memoryStream = value; }
         public string Identifier { get => identifier; set => identifier = value; }
         public bool InUse { get => inUse; set => inUse = value; }
+        public Vector3 Position { get => position; set => position = value; }
 
         public void Dispose() {
             memoryStream.Dispose();
@@ -24,7 +25,7 @@ namespace FileSystemRelay {
         }
         async void DestroyOverTime() {
             Stopwatch stopwatch = Stopwatch.StartNew();
-            while (stopwatch.ElapsedMilliseconds < 10000 || inUse) {
+            while (stopwatch.ElapsedMilliseconds < 30000 || inUse) {
                 Thread.Sleep(1000);
             }
             Dispose();
