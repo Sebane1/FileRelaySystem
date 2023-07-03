@@ -25,7 +25,7 @@ namespace FileSystemRelay {
         }
         async void DestroyOverTime() {
             Stopwatch stopwatch = Stopwatch.StartNew();
-            while (stopwatch.ElapsedMilliseconds < 30000 || inUse) {
+            while (stopwatch.ElapsedMilliseconds < 35000 || inUse) {
                 Thread.Sleep(1000);
             }
             Dispose();

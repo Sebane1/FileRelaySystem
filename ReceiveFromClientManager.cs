@@ -49,7 +49,7 @@ namespace FileSystemRelay {
                                     stopwatch.Start();
                                     Console.WriteLine("Client requesting " + hash);
                                     // Wait for the file to exist, probably not uploaded or still uploading.
-                                    while (!fileManager.Files.ContainsKey(hash) && stopwatch.ElapsedMilliseconds < 15000) {
+                                    while (!fileManager.Files.ContainsKey(hash) && stopwatch.ElapsedMilliseconds < 10000) {
                                         Thread.Sleep(1000);
                                     }
 
@@ -77,6 +77,39 @@ namespace FileSystemRelay {
                                     } else {
                                         writer.Write((byte)0);
                                         Console.WriteLine("Audio was not found");
+                                    }
+                                    Close();
+                                    break;
+                                case 2:
+                                    stopwatch = new Stopwatch();
+                                    stopwatch.Start();
+                                    Console.WriteLine("Client requesting " + hash);
+                                    // Wait for the file to exist, probably not uploaded or still uploading.
+                                    while (!fileManager.Files.ContainsKey(hash) && stopwatch.ElapsedMilliseconds < 5000) {
+                                        Thread.Sleep(1000);
+                                    }
+
+                                    // Does the file exist now?
+                                    if (fileManager.Files.ContainsKey(hash)) {
+                                        FileIdentifier identifier = fileManager.Files[hash];
+                                        // Is the data in use by another downloader? Wait if so.
+                                        while (identifier.InUse) {
+                                            Thread.Sleep(100);
+                                        }
+                                        // Send the data.
+                                        lock (identifier) {
+                                            identifier.InUse = true;
+                                            writer.Write((byte)1);
+                                            writer.Write(identifier.Position.X);
+                                            writer.Write(identifier.Position.Y);
+                                            writer.Write(identifier.Position.Z);
+                                            writer.Flush();
+                                            identifier.InUse = false;
+                                        }
+                                        Console.WriteLine("Position Sent");
+                                    } else {
+                                        writer.Write((byte)0);
+                                        Console.WriteLine("Position not found");
                                     }
                                     Close();
                                     break;
