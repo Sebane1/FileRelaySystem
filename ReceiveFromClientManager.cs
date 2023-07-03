@@ -1,6 +1,7 @@
 ﻿using FileRelaySystem.Positional;
 using System.Diagnostics;
 using System.Net.Sockets;
+using static FileSystemRelay.FileIdentifier;
 
 namespace FileSystemRelay {
     public class ReceiveFromClientManager : StreamUtilities {
@@ -24,99 +25,91 @@ namespace FileSystemRelay {
         public void ReceiveFromClient() {
             using (BinaryReader reader = new BinaryReader(client.GetStream())) {
                 using (BinaryWriter writer = new BinaryWriter(client.GetStream())) {
-                    while (true) {
-                        try {
-                            string hash = reader.ReadString();
-                            switch (reader.ReadInt32()) {
-                                case 0:
-                                    Vector3 position = new Vector3(
-                                    reader.ReadSingle(),
-                                    reader.ReadSingle(),
-                                    reader.ReadSingle());
-                                    long length = reader.ReadInt64();
-                                    MemoryStream memoryStream = new MemoryStream();
-                                    CopyStream(reader.BaseStream, memoryStream, (int)length);
-                                    Console.WriteLine("Client sending " + hash);
-                                    if (!fileManager.Files.ContainsKey(hash)) {
-                                        fileManager.Files.Add(hash, new FileIdentifier(hash, memoryStream));
-                                        fileManager.Files[hash].OnDisposed += delegate { fileManager.Files.Remove(hash); };
+                    string hash = reader.ReadString();
+                    int requestType = reader.ReadInt32();
+                    switch (requestType) {
+                        case 0:
+                            Vector3 position = new Vector3(
+                            reader.ReadSingle(),
+                            reader.ReadSingle(),
+                            reader.ReadSingle());
+                            long length = reader.ReadInt64();
+                            MemoryStream memoryStream = new MemoryStream();
+                            CopyStream(reader.BaseStream, memoryStream, (int)length);
+                            Console.WriteLine("Incoming " + hash + " at position " +
+                            position.X + ", " + position.Y + ", " + position.Z + ".");
+                            lock (fileManager) {
+                                fileManager.AddSoundFile(new FileIdentifier(hash, memoryStream));
+                            }
+                            Console.WriteLine("Received " + hash);
+                            break;
+                        case 1:
+                        case 2:
+                            Stopwatch stopwatch = new Stopwatch();
+                            stopwatch.Start();
+                            Console.WriteLine("Client requesting " + hash);
+                            FileIdentifier identifier = null;
+                            // Backup event callback to try and get up to date data
+                            EventHandler<FileIdentifierArgs> delegateValue = delegate (object v, FileIdentifierArgs e) {
+                                lock (e.Data) {
+                                    if (e.Data.Identifier.Contains(hash)) {
+                                        identifier = e.Data;
+                                        Console.WriteLine("Event callback for " + identifier.Identifier + " found a match!");
                                     }
-                                    Console.WriteLine("Audio was received");
-                                    break;
-                                case 1:
-                                    Stopwatch stopwatch = new Stopwatch();
-                                    stopwatch.Start();
-                                    Console.WriteLine("Client requesting " + hash);
-                                    // Wait for the file to exist, probably not uploaded or still uploading.
-                                    while (!fileManager.Files.ContainsKey(hash) && stopwatch.ElapsedMilliseconds < 10000) {
-                                        Thread.Sleep(1000);
-                                    }
+                                }
+                            };
+                            lock (fileManager) {
+                                fileManager.AddEvent(delegateValue);
+                            }
 
-                                    // Does the file exist now?
-                                    if (fileManager.Files.ContainsKey(hash)) {
-                                        FileIdentifier identifier = fileManager.Files[hash];
-                                        // Is the data in use by another downloader? Wait if so.
-                                        while (identifier.InUse) {
-                                            Thread.Sleep(100);
-                                        }
-                                        // Send the data.
-                                        lock (identifier) {
-                                            identifier.InUse = true;
-                                            writer.Write((byte)1);
-                                            writer.Write(identifier.Position.X);
-                                            writer.Write(identifier.Position.Y);
-                                            writer.Write(identifier.Position.Z);
+                            // Wait for the file data to exist, probably not uploaded or still uploading.
+                            while (identifier == null && stopwatch.ElapsedMilliseconds < 30000) {
+                                lock (fileManager) {
+                                    var file = fileManager.GetFile(hash);
+                                    if (file != null) {
+                                        identifier = file;
+                                        Console.WriteLine("Found a match for " + identifier.Identifier);
+                                        break;
+                                    }
+                                }
+                                Thread.Sleep(1000);
+                            }
+
+                            // Does the file exist now?
+                            if (identifier != null) {
+                                // Is the data in use by another downloader? Wait if so.
+                                while (identifier.InUse) {
+                                    Thread.Sleep(100);
+                                }
+                                // Send the data.
+                                lock (identifier) {
+                                    identifier.InUse = true;
+                                    writer.Write((byte)1);
+                                    writer.Write(identifier.Position.X);
+                                    writer.Write(identifier.Position.Y);
+                                    writer.Write(identifier.Position.Z);
+                                    if (requestType != 2) {
+                                        lock (identifier.MemoryStream) {
                                             writer.Write(identifier.MemoryStream.Length);
                                             identifier.MemoryStream.Position = 0;
-                                            CopyStream(identifier.MemoryStream, writer.BaseStream, (int)identifier.MemoryStream.Length);
+                                            CopyStream(identifier.MemoryStream, writer.BaseStream,
+                                            (int)identifier.MemoryStream.Length);
                                             writer.Flush();
-                                            identifier.InUse = false;
                                         }
-                                        Console.WriteLine("Audio was sent");
-                                    } else {
-                                        writer.Write((byte)0);
-                                        Console.WriteLine("Audio was not found");
                                     }
-                                    break;
-                                case 2:
-                                    stopwatch = new Stopwatch();
-                                    stopwatch.Start();
-                                    Console.WriteLine("Client requesting " + hash);
-                                    // Wait for the file to exist, probably not uploaded or still uploading.
-                                    while (!fileManager.Files.ContainsKey(hash) && stopwatch.ElapsedMilliseconds < 5000) {
-                                        Thread.Sleep(1000);
-                                    }
-
-                                    // Does the file exist now?
-                                    if (fileManager.Files.ContainsKey(hash)) {
-                                        FileIdentifier identifier = fileManager.Files[hash];
-                                        // Is the data in use by another downloader? Wait if so.
-                                        while (identifier.InUse) {
-                                            Thread.Sleep(100);
-                                        }
-                                        // Send the data.
-                                        lock (identifier) {
-                                            identifier.InUse = true;
-                                            writer.Write((byte)1);
-                                            writer.Write(identifier.Position.X);
-                                            writer.Write(identifier.Position.Y);
-                                            writer.Write(identifier.Position.Z);
-                                            writer.Flush();
-                                            identifier.InUse = false;
-                                        }
-                                        Console.WriteLine("Position Sent");
-                                    } else {
-                                        writer.Write((byte)0);
-                                        Console.WriteLine("Position not found");
-                                    }
-                                    break;
+                                    identifier.InUse = false;
+                                }
+                                Console.WriteLine("Sent " + hash);
+                            } else {
+                                writer.Write((byte)0);
+                                Console.WriteLine("Could not find " + hash);
                             }
-                            Close();
-                        } catch {
-                            Close();
+                            lock (fileManager) {
+                                fileManager.OnNewSoundFile -= delegateValue;
+                            }
                             break;
-                        }
                     }
+                    Close();
                 }
             }
         }
