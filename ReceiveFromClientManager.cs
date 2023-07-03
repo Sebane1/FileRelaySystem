@@ -42,7 +42,6 @@ namespace FileSystemRelay {
                                         fileManager.Files[hash].OnDisposed += delegate { fileManager.Files.Remove(hash); };
                                     }
                                     Console.WriteLine("Audio was received");
-                                    Close();
                                     break;
                                 case 1:
                                     Stopwatch stopwatch = new Stopwatch();
@@ -78,7 +77,6 @@ namespace FileSystemRelay {
                                         writer.Write((byte)0);
                                         Console.WriteLine("Audio was not found");
                                     }
-                                    Close();
                                     break;
                                 case 2:
                                     stopwatch = new Stopwatch();
@@ -111,9 +109,9 @@ namespace FileSystemRelay {
                                         writer.Write((byte)0);
                                         Console.WriteLine("Position not found");
                                     }
-                                    Close();
                                     break;
                             }
+                            Close();
                         } catch {
                             Close();
                             break;
