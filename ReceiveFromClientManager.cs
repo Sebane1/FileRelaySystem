@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Net.Sockets;
 using System.Numerics;
-using static FileSystemRelay.FileIdentifier;
 
 namespace FileSystemRelay {
     public class ReceiveFromClientManager : StreamUtilities {
@@ -44,77 +43,30 @@ namespace FileSystemRelay {
                                 Console.WriteLine("Incoming " + hash + " at position " +
                                 position.X + ", " + position.Y + ", " + position.Z + ".");
                                 lock (fileManager) {
-                                    fileManager.AddSoundFile(new FileIdentifier(hash, memoryStream) { Position = position });
+                                    var fileIdentifier = new FileIdentifier(hash, memoryStream) { Position = position };
+                                    fileIdentifier.OnDisposed += delegate {
+                                        fileManager.Remove(hash);
+                                    };
+                                    fileManager.AddFile(fileIdentifier);
                                 }
                                 Console.WriteLine("Received " + hash);
                                 break;
                             case 1:
                             case 2:
-                                Stopwatch stopwatch = new Stopwatch();
-                                stopwatch.Start();
-                                Console.WriteLine("Client requesting " + hash);
-                                FileIdentifier identifier = null;
-                                // Backup event callback to try and get up to date data
-                                //EventHandler<FileIdentifierArgs> delegateValue = delegate (object v, FileIdentifierArgs e) {
-                                //    lock (e.Data) {
-                                //        if (e.Data.Identifier.Contains(hash)) {
-                                //            identifier = e.Data;
-                                //            Console.WriteLine("Event callback for " + identifier.Identifier + " found a match!");
-                                //        }
-                                //    }
-                                //};
-                                //lock (fileManager) {
-                                //    fileManager.AddEvent(delegateValue);
-                                //}
-
-                                // Wait for the file data to exist, probably not uploaded or still uploading.
-                                while (identifier == null && stopwatch.ElapsedMilliseconds < 30000) {
-                                    lock (fileManager) {
-                                        var file = fileManager.GetFile(hash);
-                                        if (file != null) {
-                                            identifier = file;
-                                            Console.WriteLine("Found a match for " + identifier.Identifier);
-                                            break;
-                                        }
-                                    }
-                                    Thread.Sleep(1000);
+                                SendFile(hash, writer, requestType);
+                                break;
+                            case 4:
+                                length = reader.ReadInt64();
+                                memoryStream = new MemoryStream();
+                                CopyStream(reader.BaseStream, memoryStream, (int)length);
+                                lock (fileManager) {
+                                    var fileIdentifier = new FileIdentifier(hash, memoryStream, reader.ReadInt32());
+                                    fileIdentifier.OnDisposed += delegate {
+                                        fileManager.Remove(hash);
+                                    };
+                                    fileManager.AddFile(fileIdentifier);
                                 }
-
-                                // Does the file exist now?
-                                if (identifier != null) {
-                                    // Is the data in use by another downloader? Wait if so.
-                                    while (identifier.InUse) {
-                                        Thread.Sleep(100);
-                                    }
-                                    // Send the data.
-                                    lock (identifier) {
-                                        identifier.InUse = true;
-                                        writer.Write((byte)1);
-                                        writer.Write(identifier.Position.X);
-                                        writer.Write(identifier.Position.Y);
-                                        writer.Write(identifier.Position.Z);
-                                        if (requestType != 2) {
-                                            lock (identifier.MemoryStream) {
-                                                writer.Write(identifier.MemoryStream.Length);
-                                                identifier.MemoryStream.Position = 0;
-                                                CopyStream(identifier.MemoryStream, writer.BaseStream,
-                                                (int)identifier.MemoryStream.Length);
-                                                writer.Flush();
-                                            }
-                                        } else {
-                                            Console.WriteLine("Sent position data to " + hash +
-                                            $" {identifier.Position.X},{identifier.Position.Y},{identifier.Position.Z}");
-                                        }
-                                        identifier.InUse = false;
-                                    }
-                                    Console.WriteLine("Sent " + hash);
-                                } else {
-                                    writer.Write((byte)0);
-                                    Console.WriteLine("Could not find " + hash);
-                                }
-                                //lock (fileManager) {
-                                //    fileManager.OnNewSoundFile -= delegateValue;
-                                //}
+                                Console.WriteLine("Received " + hash);
                                 break;
                         }
                         Close();
@@ -122,6 +74,62 @@ namespace FileSystemRelay {
                 }
             } catch {
                 Close();
+            }
+        }
+
+        private void SendFile(string hash, BinaryWriter writer, int requestType) {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+            Console.WriteLine("Client requesting " + hash);
+            FileIdentifier identifier = null;
+            // Wait for the file data to exist, probably not uploaded or still uploading.
+            while (identifier == null && stopwatch.ElapsedMilliseconds < 30000) {
+                lock (fileManager) {
+                    var file = fileManager.GetFile(hash);
+                    if (file != null) {
+                        identifier = file;
+                        Console.WriteLine("Found a match for " + identifier.Identifier);
+                        break;
+                    }
+                }
+                Thread.Sleep(1000);
+            }
+
+            // Does the file exist now?
+            if (identifier != null) {
+                // Is the data in use by another downloader? Wait if so.
+                while (identifier.InUse) {
+                    Thread.Sleep(100);
+                }
+                // Send the data.
+                try {
+                    identifier.InUse = true;
+                    writer.Write((byte)1);
+                    writer.Write(identifier.Position.X);
+                    writer.Write(identifier.Position.Y);
+                    writer.Write(identifier.Position.Z);
+                    if (requestType != 2) {
+                        MemoryStream dataStream = null;
+                        lock (identifier.MemoryStream) {
+                            writer.Write(identifier.MemoryStream.Length);
+                            identifier.MemoryStream.Position = 0;
+                            dataStream = new MemoryStream(identifier.MemoryStream.ToArray());
+                            identifier.InUse = false;
+                        }
+                        CopyStream(dataStream, writer.BaseStream,
+                        (int)dataStream.Length);
+                        writer.Flush();
+                    }
+                    identifier.InUse = false;
+                    Console.WriteLine("Sent " + hash);
+                } catch (Exception e) {
+                    identifier.InUse = false;
+                    Console.WriteLine("Connection interrupted for " + hash);
+                    Console.WriteLine(e);
+                }
+            } else {
+                writer.Write((byte)0);
+                Console.WriteLine("Could not find " + hash);
             }
         }
     }

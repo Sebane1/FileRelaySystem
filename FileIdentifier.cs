@@ -6,13 +6,16 @@ namespace FileSystemRelay {
         string identifier;
         MemoryStream memoryStream;
         bool inUse;
+        int expirationTime;
         Vector3 position;
         private Stopwatch stopwatch;
         public event EventHandler<FileIdentifierArgs> OnFileDataAdded;
         public event EventHandler OnDisposed;
-        public FileIdentifier(string identifier, MemoryStream memoryStream) {
+
+        public FileIdentifier(string identifier, MemoryStream memoryStream, int expirationTime = 30000) {
             this.identifier = identifier;
             this.memoryStream = memoryStream;
+            this.expirationTime = expirationTime;
             Task.Run(() => DestroyOverTime());
         }
 
@@ -41,8 +44,8 @@ namespace FileSystemRelay {
         }
         async void DestroyOverTime() {
             stopwatch = Stopwatch.StartNew();
-            while (stopwatch.ElapsedMilliseconds < 35000 || inUse) {
-                Thread.Sleep(1000);
+            while (stopwatch.ElapsedMilliseconds < expirationTime || inUse) {
+                Thread.Sleep(expirationTime);
             }
             Dispose();
             OnDisposed?.Invoke(this, EventArgs.Empty);

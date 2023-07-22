@@ -7,7 +7,7 @@ namespace FileSystemRelay {
         volatile Queue<EventHandler<FileIdentifierArgs>> eventQueue = new Queue<EventHandler<FileIdentifierArgs>>();
 
         public event EventHandler<FileIdentifierArgs> OnNewSoundFile;
-        public void AddSoundFile(FileIdentifier identifier) {
+        public void AddFile(FileIdentifier identifier) {
             lock (files) {
                 files[identifier.Identifier] = identifier;
             }
@@ -27,6 +27,12 @@ namespace FileSystemRelay {
                 } catch {
                     return null;
                 }
+            }
+        }
+        public void Remove(string hash) {
+            lock (files) {
+                FileIdentifier value;
+                files.Remove(hash, out value);
             }
         }
 
