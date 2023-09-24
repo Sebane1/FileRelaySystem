@@ -33,17 +33,12 @@ namespace FileSystemRelay {
                         int requestType = reader.ReadInt32();
                         switch (requestType) {
                             case 0:
-                                Vector3 position = new Vector3(
-                                reader.ReadSingle(),
-                                reader.ReadSingle(),
-                                reader.ReadSingle());
                                 long length = reader.ReadInt64();
                                 MemoryStream memoryStream = new MemoryStream();
                                 CopyStream(reader.BaseStream, memoryStream, (int)length);
-                                Console.WriteLine("Incoming " + hash + " at position " +
-                                position.X + ", " + position.Y + ", " + position.Z + ".");
+                                Console.WriteLine("Incoming " + hash + " at position ");
                                 lock (fileManager) {
-                                    var fileIdentifier = new FileIdentifier(hash, memoryStream) { Position = position };
+                                    var fileIdentifier = new FileIdentifier(hash, memoryStream);
                                     fileIdentifier.OnDisposed += delegate {
                                         fileManager.Remove(hash);
                                     };
@@ -105,9 +100,6 @@ namespace FileSystemRelay {
                 try {
                     identifier.InUse = true;
                     writer.Write((byte)1);
-                    writer.Write(identifier.Position.X);
-                    writer.Write(identifier.Position.Y);
-                    writer.Write(identifier.Position.Z);
                     if (requestType != 2) {
                         MemoryStream dataStream = null;
                         lock (identifier.MemoryStream) {
