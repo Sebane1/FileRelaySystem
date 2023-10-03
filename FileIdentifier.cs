@@ -9,7 +9,6 @@ namespace FileSystemRelay {
         int expirationTime;
         Vector3 position;
         private Stopwatch stopwatch;
-        public event EventHandler<FileIdentifierArgs> OnFileDataAdded;
         public event EventHandler OnDisposed;
 
         public FileIdentifier(string identifier, MemoryStream memoryStream, int expirationTime = 30000) {
@@ -28,7 +27,6 @@ namespace FileSystemRelay {
             set {
                 lock (memoryStream) {
                     memoryStream = value;
-                    OnFileDataAdded?.Invoke(this, new FileIdentifierArgs() { Data = this });
                 }
             }
         }

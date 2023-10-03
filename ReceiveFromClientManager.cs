@@ -34,11 +34,12 @@ namespace FileSystemRelay {
                         switch (requestType) {
                             case 0:
                                 long length = reader.ReadInt64();
+                                int destructionTime = reader.ReadInt32();
                                 MemoryStream memoryStream = new MemoryStream();
                                 CopyStream(reader.BaseStream, memoryStream, (int)length);
-                                Console.WriteLine("Incoming " + hash + " at position ");
+                                Console.WriteLine("Incoming " + hash);
                                 lock (fileManager) {
-                                    var fileIdentifier = new FileIdentifier(hash, memoryStream);
+                                    var fileIdentifier = new FileIdentifier(hash, memoryStream, destructionTime);
                                     fileIdentifier.OnDisposed += delegate {
                                         fileManager.Remove(hash);
                                     };
@@ -49,19 +50,6 @@ namespace FileSystemRelay {
                             case 1:
                             case 2:
                                 SendFile(hash, writer, requestType);
-                                break;
-                            case 4:
-                                length = reader.ReadInt64();
-                                memoryStream = new MemoryStream();
-                                CopyStream(reader.BaseStream, memoryStream, (int)length);
-                                lock (fileManager) {
-                                    var fileIdentifier = new FileIdentifier(hash, memoryStream, reader.ReadInt32());
-                                    fileIdentifier.OnDisposed += delegate {
-                                        fileManager.Remove(hash);
-                                    };
-                                    fileManager.AddFile(fileIdentifier);
-                                }
-                                Console.WriteLine("Received " + hash);
                                 break;
                         }
                         Close();
