@@ -34,10 +34,10 @@ namespace FileSystemRelay {
                         switch (requestType) {
                             case 0:
                                 long length = reader.ReadInt64();
-                                int destructionTime = reader.ReadInt32();
                                 MemoryStream memoryStream = new MemoryStream();
                                 CopyStream(reader.BaseStream, memoryStream, (int)length);
                                 Console.WriteLine("Incoming " + hash);
+                                int destructionTime = reader.ReadInt32();
                                 lock (fileManager) {
                                     var fileIdentifier = new FileIdentifier(hash, memoryStream, destructionTime);
                                     fileIdentifier.OnDisposed += delegate {
