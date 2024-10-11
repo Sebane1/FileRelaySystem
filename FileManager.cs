@@ -7,6 +7,13 @@ namespace FileSystemRelay {
 
         public void AddFile(FileIdentifier identifier) {
             lock (files) {
+                if (files.ContainsKey(identifier.Identifier)) {
+                    try {
+                        files[identifier.Identifier]?.Dispose();
+                    } catch (Exception ex) {
+                        Console.WriteLine(ex.ToString());
+                    }
+                }
                 files[identifier.Identifier] = identifier;
             }
         }

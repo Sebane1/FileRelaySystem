@@ -1,34 +1,28 @@
 ﻿using System.Diagnostics;
+using System.Net;
 using System.Net.Sockets;
 using System.Numerics;
 
 namespace FileSystemRelay {
     public class ReceiveFromClientManager : StreamUtilities {
-        private TcpClient client;
+        private HttpListenerContext client;
         private FileManager fileManager;
 
-        public ReceiveFromClientManager(TcpClient client, FileManager fileManager) {
+        public ReceiveFromClientManager(HttpListenerContext client, FileManager fileManager) {
             this.client = client;
             this.fileManager = fileManager;
         }
         public void Close() {
-            if (client != null) {
-                if (client.Client != null) {
-                    try {
-                        client.Client?.Shutdown(SocketShutdown.Both);
-                        client.Client?.Disconnect(true);
-                        client?.Close();
-                        client?.Dispose();
-                    } catch {
-
-                    }
-                }
-            }
+            //if (reader != null) {
+            //    reader?.Close();
+            //    reader?.Dispose();
+            //    client.
+            //}
         }
         public void ReceiveFromClient() {
             try {
-                using (BinaryReader reader = new BinaryReader(client.GetStream())) {
-                    using (BinaryWriter writer = new BinaryWriter(client.GetStream())) {
+                using (BinaryReader reader = new BinaryReader(client.Request.InputStream)) {
+                    using (BinaryWriter writer = new BinaryWriter(client.Response.OutputStream)) {
                         string hash = reader.ReadString();
                         int requestType = reader.ReadInt32();
                         switch (requestType) {
@@ -39,7 +33,7 @@ namespace FileSystemRelay {
                                 Console.WriteLine("Incoming " + hash);
                                 int destructionTime = reader.ReadInt32();
                                 lock (fileManager) {
-                                    var fileIdentifier = new FileIdentifier(hash, memoryStream, destructionTime);
+                                    var fileIdentifier = new FileIdentifier(hash, memoryStream, Math.Clamp(destructionTime, 0, 60000));
                                     fileIdentifier.OnDisposed += delegate {
                                         fileManager.Remove(hash);
                                     };
@@ -52,12 +46,12 @@ namespace FileSystemRelay {
                                 SendFile(hash, writer, requestType);
                                 break;
                         }
-                        Close();
                     }
                 }
-            } catch {
-                Close();
+            } catch (Exception e) {
+                Console.WriteLine(e.Message);
             }
+            Close();
         }
 
         private void SendFile(string hash, BinaryWriter writer, int requestType) {
