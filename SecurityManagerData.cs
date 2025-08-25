@@ -23,6 +23,10 @@ namespace FileRelaySystem {
         public string MasterKeySalt { get => _masterKeySalt; set => _masterKeySalt = value; }
         public List<string> UnclaimedKeyHashes { get => _unclaimedKeyHashes; set => _unclaimedKeyHashes = value; }
         public int SynchronizationContext { get => _synchronizationContext; set => _synchronizationContext = value; }
+        public string ServerRules { get => _serverRules; set => _serverRules = value; }
+        public AgeGroup AgeGroup { get => _ageGroup; set => _ageGroup = value; }
+        public ServerContentRating ServerContent { get => _serverContent; set => _serverContent = value; }
+        public ServerContentType ServerContentType { get => _serverContentType; set => _serverContentType = value; }
     }
     public enum AgeGroup {
         Everyone = 0,
