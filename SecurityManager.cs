@@ -69,9 +69,9 @@ namespace FileRelaySystem {
 
         public void CheckOrCreateSessionUser(string sessionId) {
             if (!_securityManagerData.PersistedSessionData.ContainsKey(sessionId)) {
-                // Add the new client. First client to ever get registered with the server is admin.
+                // Add the new client. First client to ever get registered with the server is the Creator.
                 _securityManagerData.PersistedSessionData.Add(sessionId, new PersistedSessionData() {
-                    ServerRole = _securityManagerData.PersistedSessionData.Count == 1 ? ServerRole.Admin : ServerRole.None
+                    ServerRole = _securityManagerData.PersistedSessionData.Count == 1 ? ServerRole.Creator : ServerRole.None
                 });
                 PersistData();
             }
@@ -82,6 +82,15 @@ namespace FileRelaySystem {
             _securityManagerData.UnclaimedKeyHashes.Add(SHA512Hash(code));
             PersistData();
             return code;
+        }
+        public void BanSessionId(string sessionIdToBan) {
+            if (_securityManagerData.PersistedSessionData.ContainsKey(sessionIdToBan)) {
+                // Cant ban the creator. Check that the user isn't one.
+                if (_securityManagerData.PersistedSessionData[sessionIdToBan].ServerRole != ServerRole.Creator) {
+                    _securityManagerData.PersistedSessionData[sessionIdToBan].Banned = true;
+                    _securityManagerData.PersistedSessionData[sessionIdToBan].HashedAccessKey = "";
+                }
+            }
         }
 
         public static string SHA512Hash(string value) {

@@ -25,6 +25,7 @@
     public enum ServerRole {
         None,
         Moderator,
-        Admin
+        Admin,
+        Creator
     }
 }
