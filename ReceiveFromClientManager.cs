@@ -14,6 +14,8 @@ namespace FileSystemRelay {
             ClearState = 2,
             AddPersistedFile = 3,
             GetPersistedFile = 4,
+            BanUser = 5,
+            IssueAccessToken = 6,
         }
         public ReceiveFromClientManager(HttpListenerContext client, FileManager fileManager) {
             this.client = client;
@@ -28,39 +30,52 @@ namespace FileSystemRelay {
                         string authenticationToken = reader.ReadString();
                         var authenticationData = SecurityManager.Instance.Authenticate(sessionId, authenticationToken);
                         if (authenticationData.Key) {
-                            string fileId = reader.ReadString();
+                            string targetValue = reader.ReadString();
                             int requestType = reader.ReadInt32();
                             switch ((RequestType)requestType) {
                                 case RequestType.AddTemporaryFile:
                                     long length = reader.ReadInt64();
                                     MemoryStream memoryStream = new MemoryStream();
                                     CopyStream(reader.BaseStream, memoryStream, (int)length);
-                                    Console.WriteLine(sessionId + " uploading " + fileId);
+                                    Console.WriteLine(sessionId + " uploading " + targetValue);
                                     int destructionTime = reader.ReadInt32();
                                     lock (fileManager) {
-                                        var fileIdentifier = new FileIdentifier(fileId, memoryStream, Math.Clamp(destructionTime, 0, 60000));
+                                        var fileIdentifier = new FileIdentifier(targetValue, memoryStream, Math.Clamp(destructionTime, 0, 60000));
                                         fileIdentifier.OnDisposed += delegate {
-                                            fileManager.Remove(fileId);
+                                            fileManager.Remove(targetValue);
                                         };
                                         fileManager.AddTemporaryFile(fileIdentifier);
                                     }
-                                    Console.WriteLine(sessionId + " received " + fileId);
+                                    Console.WriteLine(sessionId + " received " + targetValue);
                                     break;
                                 case RequestType.GetTemporaryFile:
                                 case RequestType.ClearState:
-                                    GetTemporaryFile(fileId, writer, requestType);
+                                    GetTemporaryFile(targetValue, writer, requestType);
                                     break;
                                 case RequestType.AddPersistedFile:
                                     length = reader.ReadInt64();
-                                    Console.WriteLine(sessionId + " uploading " + fileId);
-                                    string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cdn", fileId + ".hex");
+                                    Console.WriteLine(sessionId + " uploading " + targetValue);
+                                    string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cdn", targetValue + ".hex");
                                     using (FileStream fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write)) {
                                         CopyStream(reader.BaseStream, fileStream, (int)length);
                                     }
-                                    Console.WriteLine(sessionId + " persisted " + fileId);
+                                    Console.WriteLine(sessionId + " persisted " + targetValue);
                                     break;
                                 case RequestType.GetPersistedFile:
-                                    GetPersistedFile(fileId, writer);
+                                    GetPersistedFile(targetValue, writer);
+                                    break;
+                                case RequestType.BanUser:
+                                    if (SecurityManager.Instance.BanSessionId(sessionId, targetValue)) {
+                                        Console.WriteLine(sessionId + " banned " + targetValue);
+                                    } else {
+                                        Console.WriteLine(sessionId + " has insufficient permissions to ban " + targetValue);
+                                        writer.Write("Ban succeeded");
+                                    }
+                                    break;
+                                case RequestType.IssueAccessToken:
+                                    if (authenticationData.Value > 0) {
+                                        writer.Write(SecurityManager.Instance.GenerateUnclaimedAccessToken());
+                                    }
                                     break;
                             }
                         }

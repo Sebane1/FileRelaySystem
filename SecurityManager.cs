@@ -77,20 +77,27 @@ namespace FileRelaySystem {
             }
         }
 
-        public string GenerateUnclaimedAccessKey() {
+        public string GenerateUnclaimedAccessToken() {
             string code = Guid.NewGuid().ToString();
             _securityManagerData.UnclaimedKeyHashes.Add(SHA512Hash(code));
             PersistData();
             return code;
         }
-        public void BanSessionId(string sessionIdToBan) {
+        public bool BanSessionId(string sessionId, string sessionIdToBan) {
             if (_securityManagerData.PersistedSessionData.ContainsKey(sessionIdToBan)) {
-                // Cant ban the creator. Check that the user isn't one.
-                if (_securityManagerData.PersistedSessionData[sessionIdToBan].ServerRole != ServerRole.Creator) {
-                    _securityManagerData.PersistedSessionData[sessionIdToBan].Banned = true;
-                    _securityManagerData.PersistedSessionData[sessionIdToBan].HashedAccessKey = "";
+                var userIssuingBan = _securityManagerData.PersistedSessionData[sessionIdToBan];
+                // Must have a server role.
+                if (userIssuingBan.ServerRole != ServerRole.None) {
+                    var userToBan = _securityManagerData.PersistedSessionData[sessionIdToBan];
+                    // Must be a higher rank the user being banned.
+                    if (userIssuingBan.ServerRole > userIssuingBan.ServerRole) {
+                        _securityManagerData.PersistedSessionData[sessionIdToBan].Banned = true;
+                        _securityManagerData.PersistedSessionData[sessionIdToBan].HashedAccessKey = "";
+                        return true;
+                    }
                 }
             }
+            return false;
         }
 
         public static string SHA512Hash(string value) {
