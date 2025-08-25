@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using FileRelaySystem;
+using System.Net;
 using System.Net.Sockets;
 
 namespace FileSystemRelay {
@@ -7,7 +8,20 @@ namespace FileSystemRelay {
         static void Main(string[] args) {
             Console.WriteLine("Starting server");
             FileManager fileManager = new FileManager();
+            SecurityManager securityManager = new SecurityManager();
             HttpListener fileReceiverListener = new HttpListener();
+            if (!securityManager.CheckIfPasswordExists()) {
+                bool passwordSetSucceeded = false;
+                while (!passwordSetSucceeded) {
+                    Console.WriteLine("No master password set. Please make one for connecting from client.");
+                    passwordSetSucceeded = securityManager.SetMasterPassword(Console.ReadLine());
+                    if (!passwordSetSucceeded) {
+                        Console.WriteLine("Password cannot be empty!");
+                    } else {
+                        Console.WriteLine("Password set! Do not share it with others.");
+                    }
+                }
+            }
             fileReceiverListener.Prefixes.Add("http://10.0.0.21:5105/");
             fileReceiverListener.Prefixes.Add("http://localhost:5105/");
             fileReceiverListener.Prefixes.Add("http://127.0.0.1:5105/");

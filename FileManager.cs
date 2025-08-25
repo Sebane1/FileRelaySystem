@@ -5,7 +5,7 @@ namespace FileSystemRelay {
     public class FileManager {
         volatile ConcurrentDictionary<string, FileIdentifier> files = new ConcurrentDictionary<string, FileIdentifier>();
 
-        public void AddFile(FileIdentifier identifier) {
+        public void AddTemporaryFile(FileIdentifier identifier) {
             lock (files) {
                 if (files.ContainsKey(identifier.Identifier)) {
                     try {

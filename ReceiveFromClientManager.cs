@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using FileRelaySystem;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Numerics;
@@ -7,54 +8,87 @@ namespace FileSystemRelay {
     public class ReceiveFromClientManager : StreamUtilities {
         private HttpListenerContext client;
         private FileManager fileManager;
-
+        public enum RequestType {
+            AddTemporaryFile = 0,
+            GetTemporaryFile = 1,
+            ClearState = 2,
+            AddPersistedFile = 3,
+            GetPersistedFile = 4,
+        }
         public ReceiveFromClientManager(HttpListenerContext client, FileManager fileManager) {
             this.client = client;
             this.fileManager = fileManager;
         }
-        public void Close() {
-            //if (reader != null) {
-            //    reader?.Close();
-            //    reader?.Dispose();
-            //    client.
-            //}
-        }
+
         public void ReceiveFromClient() {
             try {
                 using (BinaryReader reader = new BinaryReader(client.Request.InputStream)) {
                     using (BinaryWriter writer = new BinaryWriter(client.Response.OutputStream)) {
-                        string hash = reader.ReadString();
-                        int requestType = reader.ReadInt32();
-                        switch (requestType) {
-                            case 0:
-                                long length = reader.ReadInt64();
-                                MemoryStream memoryStream = new MemoryStream();
-                                CopyStream(reader.BaseStream, memoryStream, (int)length);
-                                Console.WriteLine("Incoming " + hash);
-                                int destructionTime = reader.ReadInt32();
-                                lock (fileManager) {
-                                    var fileIdentifier = new FileIdentifier(hash, memoryStream, Math.Clamp(destructionTime, 0, 60000));
-                                    fileIdentifier.OnDisposed += delegate {
-                                        fileManager.Remove(hash);
-                                    };
-                                    fileManager.AddFile(fileIdentifier);
-                                }
-                                Console.WriteLine("Received " + hash);
-                                break;
-                            case 1:
-                            case 2:
-                                SendFile(hash, writer, requestType);
-                                break;
+                        string sessionId = reader.ReadString();
+                        string authenticationToken = reader.ReadString();
+                        var authenticationData = SecurityManager.Instance.Authenticate(sessionId, authenticationToken);
+                        if (authenticationData.Key) {
+                            string fileId = reader.ReadString();
+                            int requestType = reader.ReadInt32();
+                            switch ((RequestType)requestType) {
+                                case RequestType.AddTemporaryFile:
+                                    long length = reader.ReadInt64();
+                                    MemoryStream memoryStream = new MemoryStream();
+                                    CopyStream(reader.BaseStream, memoryStream, (int)length);
+                                    Console.WriteLine(sessionId + " uploading " + fileId);
+                                    int destructionTime = reader.ReadInt32();
+                                    lock (fileManager) {
+                                        var fileIdentifier = new FileIdentifier(fileId, memoryStream, Math.Clamp(destructionTime, 0, 60000));
+                                        fileIdentifier.OnDisposed += delegate {
+                                            fileManager.Remove(fileId);
+                                        };
+                                        fileManager.AddTemporaryFile(fileIdentifier);
+                                    }
+                                    Console.WriteLine(sessionId + " received " + fileId);
+                                    break;
+                                case RequestType.GetTemporaryFile:
+                                case RequestType.ClearState:
+                                    GetTemporaryFile(fileId, writer, requestType);
+                                    break;
+                                case RequestType.AddPersistedFile:
+                                    length = reader.ReadInt64();
+                                    Console.WriteLine(sessionId + " uploading " + fileId);
+                                    string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cdn", fileId + ".hex");
+                                    using (FileStream fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write)) {
+                                        CopyStream(reader.BaseStream, fileStream, (int)length);
+                                    }
+                                    Console.WriteLine(sessionId + " persisted " + fileId);
+                                    break;
+                                case RequestType.GetPersistedFile:
+                                    GetPersistedFile(fileId, writer);
+                                    break;
+                            }
                         }
                     }
                 }
             } catch (Exception e) {
                 Console.WriteLine(e.Message);
             }
-            Close();
         }
-
-        private void SendFile(string hash, BinaryWriter writer, int requestType) {
+        private void GetPersistedFile(string hash, BinaryWriter writer) {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+            Console.WriteLine("Client requesting " + hash);
+            try {
+                string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cdn", hash + ".hex");
+                if (File.Exists(filePath)) {
+                    using (FileStream fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read)) {
+                        CopyStream(fileStream, writer.BaseStream, (int)fileStream.Length);
+                        writer.Flush();
+                    }
+                    Console.WriteLine("Sent " + hash);
+                }
+            } catch (Exception e) {
+                Console.WriteLine("Connection interrupted for " + hash);
+                Console.WriteLine(e);
+            }
+        }
+        private void GetTemporaryFile(string hash, BinaryWriter writer, int requestType) {
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
             Console.WriteLine("Client requesting " + hash);
