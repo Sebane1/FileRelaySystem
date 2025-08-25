@@ -89,7 +89,7 @@ namespace FileRelaySystem {
                 // Must have a server role.
                 if (userIssuingBan.ServerRole != ServerRole.None) {
                     var userToBan = _securityManagerData.PersistedSessionData[sessionIdToBan];
-                    // Must be a higher rank the user being banned.
+                    // Must be a higher rank than the user being banned.
                     if (userIssuingBan.ServerRole > userIssuingBan.ServerRole) {
                         _securityManagerData.PersistedSessionData[sessionIdToBan].Banned = true;
                         _securityManagerData.PersistedSessionData[sessionIdToBan].HashedAccessKey = "";
