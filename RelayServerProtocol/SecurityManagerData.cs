@@ -3,7 +3,7 @@ using static RelayUploadProtocol.Structs;
 
 namespace FileRelaySystem {
     public class SecurityManagerData {
-        Dictionary<string, PersistedSessionData> _persistedSessionData;
+        Dictionary<string, PersistedSessionData> _persistedSessionData = new Dictionary<string, PersistedSessionData>();
         string _masterKeyHash = "";
         string _masterKeySalt = "";
         List<string> _unclaimedKeyHashes = new List<string>();

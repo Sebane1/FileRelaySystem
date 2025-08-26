@@ -47,7 +47,9 @@ namespace FileSystemRelay {
                                 case RequestType.AddPersistedFile:
                                     length = reader.ReadInt64();
                                     Console.WriteLine(sessionId + " uploading " + targetValue);
-                                    string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cdn", targetValue + ".hex");
+                                    string directory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cdn");
+                                    Directory.CreateDirectory(directory);
+                                    string filePath = Path.Combine(directory, targetValue + ".hex");
                                     using (FileStream fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write)) {
                                         CopyStream(reader.BaseStream, fileStream, (int)length);
                                     }

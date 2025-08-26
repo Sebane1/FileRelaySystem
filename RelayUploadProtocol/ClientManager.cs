@@ -2,13 +2,13 @@
 using static RelayUploadProtocol.Structs;
 
 namespace RelayUploadProtocol {
-    public class ClientManager {
-        string ipAddress = "localhost";
-        public ClientManager() {
+    public static class ClientManager {
+        static string ipAddress = "localhost";
 
-        }
-        public async Task<string> GetTemporaryFile(string sessionId, string authenticationToken, string fileId, string outputFolder) {
-            string serverUrl = ipAddress + ":5105";
+        public static string IpAddress { get => ipAddress; set => ipAddress = value; }
+
+        public static async Task<string> GetTemporaryFile(string sessionId, string authenticationToken, string fileId, string outputFolder) {
+            string serverUrl = "http://" + ipAddress + ":5105";
             int requestType = (int)RequestType.GetTemporaryFile;
 
             using (var ms = new MemoryStream())
@@ -49,8 +49,8 @@ namespace RelayUploadProtocol {
             }
         }
 
-        public async Task PutTemporaryFile(string sessionId, string authenticationToken, string fileId, string filePath, int destructionTime) {
-            string serverUrl = ipAddress + ":5105";
+        public static async Task PutTemporaryFile(string sessionId, string authenticationToken, string fileId, string filePath, int destructionTime) {
+            string serverUrl = "http://" + ipAddress + ":5105";
             int requestType = (int)RequestType.AddTemporaryFile;
 
             // Clamp destruction time to match server rules
@@ -90,8 +90,8 @@ namespace RelayUploadProtocol {
         }
 
 
-        public async Task<string> GetPersistedFile(string sessionId, string authenticationToken, string fileId, string outputFolder) {
-            string serverUrl = ipAddress + ":5105";
+        public static async Task<string> GetPersistedFile(string sessionId, string authenticationToken, string fileId, string outputFolder) {
+            string serverUrl = "http://" + ipAddress + ":5105";
             int requestType = (int)RequestType.GetPersistedFile;
 
             using (var ms = new MemoryStream())
@@ -125,8 +125,8 @@ namespace RelayUploadProtocol {
         }
 
 
-        public async Task PutPersistedFile(string sessionId, string authenticationToken, string fileId, string filePath) {
-            string serverUrl = ipAddress + ":5105";
+        public static async Task PutPersistedFile(string sessionId, string authenticationToken, string fileId, string filePath) {
+            string serverUrl = "http://" + ipAddress + ":5105";
             int requestType = (int)RequestType.AddPersistedFile;
 
             using (var ms = new MemoryStream())

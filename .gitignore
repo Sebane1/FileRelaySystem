@@ -3,3 +3,7 @@ ServerConfigurator/bin
 ServerConfigurator/obj
 RelayUploadProtocol/obj
 RelayUploadProtocol/bin
+RelayServerProtocol/bin
+RelayServerProtocol/obj
+RelayStructs/bin
+RelayStructs/obj

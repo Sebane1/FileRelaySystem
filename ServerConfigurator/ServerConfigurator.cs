@@ -1,4 +1,5 @@
-using FileRelaySystem;
+using Microsoft.VisualBasic.ApplicationServices;
+using RelayUploadProtocol;
 using static RelayUploadProtocol.Structs;
 
 namespace ServerConfigurator {
@@ -21,7 +22,7 @@ namespace ServerConfigurator {
         }
 
         private void testServerButton_Click(object sender, EventArgs e) {
-
+            ClientManager.PutPersistedFile("Poopfart", "artemis", "cake", @"C:\Users\stel9\Pictures\AMF.png");
         }
     }
 }

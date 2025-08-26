@@ -23,6 +23,9 @@ namespace FileRelaySystem {
             if (File.Exists(configPath)) {
                 try {
                     _securityManagerData = JsonConvert.DeserializeObject<SecurityManagerData>(File.ReadAllText(configPath));
+                    if (_securityManagerData.PersistedSessionData == null) {
+                        _securityManagerData.PersistedSessionData = new Dictionary<string, PersistedSessionData>();
+                    }
                 } catch {
 
                 }
@@ -46,7 +49,7 @@ namespace FileRelaySystem {
 
         public KeyValuePair<bool, ServerRole> Authenticate(string sessionId, string authenticationToken) {
             string authenticationHash = SHA512Hash(authenticationToken);
-            string masterKeyAuthenticationHash = SHA512Hash(authenticationToken + _securityManagerData.MasterKeyHash);
+            string masterKeyAuthenticationHash = SHA512Hash(authenticationToken + _securityManagerData.MasterKeySalt);
             bool authenticationSuccess = false;
             if (masterKeyAuthenticationHash == _securityManagerData.MasterKeyHash) {
                 CheckOrCreateSessionUser(sessionId);

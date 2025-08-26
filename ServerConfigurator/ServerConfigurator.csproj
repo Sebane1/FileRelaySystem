@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FileRelaySystem\FileRelaySystem.csproj" />
+    <ProjectReference Include="..\RelayUploadProtocol\RelayClientProtocol.csproj" />
   </ItemGroup>
 
 </Project>
