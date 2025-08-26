@@ -1,4 +1,5 @@
 using FileRelaySystem;
+using static RelayUploadProtocol.Structs;
 
 namespace ServerConfigurator {
     public partial class ServerConfigurator : Form {
@@ -17,6 +18,10 @@ namespace ServerConfigurator {
             ageGroupComboBox.Items.AddRange(ageGroups);
             serverContentComboBox.Items.AddRange(contentRatings);
             serverContentTypeComboBox.Items.AddRange(serverContent);
+        }
+
+        private void testServerButton_Click(object sender, EventArgs e) {
+
         }
     }
 }

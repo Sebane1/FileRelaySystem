@@ -150,6 +150,7 @@
             testServerButton.TabIndex = 13;
             testServerButton.Text = "Test Server";
             testServerButton.UseVisualStyleBackColor = true;
+            testServerButton.Click += testServerButton_Click;
             // 
             // ServerConfigurator
             // 

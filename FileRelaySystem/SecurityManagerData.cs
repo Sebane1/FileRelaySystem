@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Mime;
-using System.Text;
-using System.Threading.Tasks;
+using static RelayUploadProtocol.Structs;
 
 namespace FileRelaySystem {
     public class SecurityManagerData {
@@ -29,19 +25,5 @@ namespace FileRelaySystem {
         public AgeGroup AgeGroup { get => _ageGroup; set => _ageGroup = value; }
         public ServerContentRating ServerContent { get => _serverContent; set => _serverContent = value; }
         public ServerContentType ServerContentType { get => _serverContentType; set => _serverContentType = value; }
-    }
-    public enum AgeGroup {
-        Everyone = 0,
-        AdultsOnly = 1
-    }
-    public enum ServerContentRating {
-        SafeForWorkOnly = 0,
-        NotSafeForWork = 1,
-    }
-    public enum ServerContentType {
-        General = 0,
-        Outfits = 1,
-        Memes = 2,
-        Other = 3
     }
 }

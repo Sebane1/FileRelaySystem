@@ -3,20 +3,12 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Numerics;
+using static RelayUploadProtocol.Structs;
 
 namespace FileSystemRelay {
     public class ReceiveFromClientManager : StreamUtilities {
         private HttpListenerContext client;
         private FileManager fileManager;
-        public enum RequestType {
-            AddTemporaryFile = 0,
-            GetTemporaryFile = 1,
-            ClearState = 2,
-            AddPersistedFile = 3,
-            GetPersistedFile = 4,
-            BanUser = 5,
-            IssueAccessToken = 6,
-        }
         public ReceiveFromClientManager(HttpListenerContext client, FileManager fileManager) {
             this.client = client;
             this.fileManager = fileManager;
