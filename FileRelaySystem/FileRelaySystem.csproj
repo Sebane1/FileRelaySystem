@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RelayUploadProtocol\RelayClientProtocol.csproj" />
+    <ProjectReference Include="..\RelayServerProtocol\RelayServerProtocol.csproj" />
   </ItemGroup>
 
 </Project>
