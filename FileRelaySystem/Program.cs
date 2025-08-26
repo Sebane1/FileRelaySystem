@@ -24,7 +24,6 @@ namespace FileSystemRelay {
             }
             fileReceiverListener.Prefixes.Add("http://10.0.0.21:5105/");
             fileReceiverListener.Prefixes.Add("http://localhost:5105/");
-            fileReceiverListener.Prefixes.Add("http://127.0.0.1:5105/");
             fileReceiverListener.Start();
             Thread thread = new Thread(new ThreadStart(delegate {
                 while (true) {

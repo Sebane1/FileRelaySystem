@@ -22,7 +22,7 @@ namespace FileRelaySystem {
             string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "mainConfig.json");
             if (File.Exists(configPath)) {
                 try {
-                    File.ReadAllText(configPath);
+                    _securityManagerData = JsonConvert.DeserializeObject<SecurityManagerData>(File.ReadAllText(configPath));
                 } catch {
 
                 }
