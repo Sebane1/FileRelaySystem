@@ -1,9 +1,10 @@
-﻿using System;
+using System;
+using System.Collections.Concurrent;
 using static RelayUploadProtocol.Structs;
 
 namespace FileRelaySystem {
-    public class SecurityManagerData {
-        Dictionary<string, PersistedSessionData> _persistedSessionData = new Dictionary<string, PersistedSessionData>();
+    public class ServerData {
+        ConcurrentDictionary<string, PersistedSessionData> _persistedSessionData = new ConcurrentDictionary<string, PersistedSessionData>();
         string _masterKeyHash = "";
         string _masterKeySalt = "";
         List<string> _unclaimedKeyHashes = new List<string>();
@@ -15,7 +16,7 @@ namespace FileRelaySystem {
         ServerContentType _serverContentType;
         int _synchronizationContext = -1;
 
-        public Dictionary<string, PersistedSessionData> PersistedSessionData { get => _persistedSessionData; set => _persistedSessionData = value; }
+        public ConcurrentDictionary<string, PersistedSessionData> PersistedSessionData { get => _persistedSessionData; set => _persistedSessionData = value; }
         public string MasterKeyHash { get => _masterKeyHash; set => _masterKeyHash = value; }
         public string MasterKeySalt { get => _masterKeySalt; set => _masterKeySalt = value; }
         public List<string> UnclaimedKeyHashes { get => _unclaimedKeyHashes; set => _unclaimedKeyHashes = value; }
@@ -25,5 +26,6 @@ namespace FileRelaySystem {
         public AgeGroup AgeGroup { get => _ageGroup; set => _ageGroup = value; }
         public ServerContentRating ServerContent { get => _serverContent; set => _serverContent = value; }
         public ServerContentType ServerContentType { get => _serverContentType; set => _serverContentType = value; }
+
     }
 }
