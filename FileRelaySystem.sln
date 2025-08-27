@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RelayClientProtocol", "Rela
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RelayServerProtocol", "RelayServerProtocol\RelayServerProtocol.csproj", "{A298E5EE-3A5F-4AFF-AFA5-CE1A7C6E228B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RelayCommonStructs", "RelayStructs\RelayCommonStructs.csproj", "{2B7B5E2C-DD8F-4638-8880-2DF6810F5608}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RelayCommonData", "RelayStructs\RelayCommonData.csproj", "{2B7B5E2C-DD8F-4638-8880-2DF6810F5608}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

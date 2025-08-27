@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using RelayCommonData;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -42,7 +43,7 @@ namespace FileRelaySystem {
         public bool SetMasterPassword(string password) {
             if (!string.IsNullOrEmpty(password)) {
                 _securityManagerData.MasterKeySalt = Guid.NewGuid().ToString();
-                _securityManagerData.MasterKeyHash = SHA512Hash(password + _securityManagerData.MasterKeySalt);
+                _securityManagerData.MasterKeyHash = Hashing.SHA512Hash(password + _securityManagerData.MasterKeySalt);
                 PersistData();
                 return true;
             }
@@ -50,8 +51,8 @@ namespace FileRelaySystem {
         }
 
         public KeyValuePair<bool, ServerRole> Authenticate(string sessionId, string authenticationToken) {
-            string authenticationHash = SHA512Hash(authenticationToken);
-            string masterKeyAuthenticationHash = SHA512Hash(authenticationToken + _securityManagerData.MasterKeySalt);
+            string authenticationHash = Hashing.SHA512Hash(authenticationToken);
+            string masterKeyAuthenticationHash = Hashing.SHA512Hash(authenticationToken + _securityManagerData.MasterKeySalt);
             bool authenticationSuccess = false;
             if (masterKeyAuthenticationHash == _securityManagerData.MasterKeyHash) {
                 CheckOrCreateSessionUser(sessionId);
@@ -84,7 +85,7 @@ namespace FileRelaySystem {
 
         public string GenerateUnclaimedAccessToken() {
             string code = Guid.NewGuid().ToString();
-            _securityManagerData.UnclaimedKeyHashes.Add(SHA512Hash(code));
+            _securityManagerData.UnclaimedKeyHashes.Add(Hashing.SHA512Hash(code));
             PersistData();
             return code;
         }
@@ -104,18 +105,6 @@ namespace FileRelaySystem {
                 }
             }
             return false;
-        }
-
-        public static string SHA512Hash(string value) {
-            using (var alg = SHA512.Create()) {
-                var message = Encoding.UTF8.GetBytes(value);
-                var hashValue = alg.ComputeHash(message);
-                string hex = "";
-                foreach (byte x in hashValue) {
-                    hex += string.Format("{0:x2}", x);
-                }
-                return hex;
-            }
         }
     }
 }

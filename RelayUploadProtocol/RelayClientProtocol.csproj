@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RelayStructs\RelayCommonStructs.csproj" />
+    <ProjectReference Include="..\RelayStructs\RelayCommonData.csproj" />
   </ItemGroup>
 
 </Project>
