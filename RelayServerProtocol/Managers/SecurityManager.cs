@@ -59,7 +59,8 @@ namespace RelayServerProtocol.Managers
                             optionsBuilder.UseNpgsql(connectionString);
                             break;
                         case DatabaseProviderType.MySql:
-                            optionsBuilder.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 36))); // specify your MySQL version
+                            optionsBuilder.UseMySql(connectionString, new MySqlServerVersion(
+                            new Version(dataStorageType.MajorMySql, dataStorageType.MinorMySql, dataStorageType.PatchMySql)));
                             break;
 
                     }
