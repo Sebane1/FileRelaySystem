@@ -43,7 +43,7 @@ namespace RelayServerProtocol.Managers
 
                     // Pick based on config
                     var provider = dataStorageType.DatabaseProviderType;
-                    var connectionString = "";
+                    var connectionString = dataStorageType.ConnectionString;
 
 
                     switch (provider)
@@ -53,17 +53,13 @@ namespace RelayServerProtocol.Managers
                             optionsBuilder.UseSqlite(connectionString);
                             break;
                         case DatabaseProviderType.SqlServer:
-                            connectionString = $"Server={dataStorageType.DatabaseHost};Database=RelayDb;Trusted_Connection=True;";
                             optionsBuilder.UseSqlServer(connectionString);
                             break;
                         case DatabaseProviderType.Postgres:
-                            connectionString = $"Host={dataStorageType.DatabaseHost};Database=RelayDb;Username={dataStorageType.DatabaseUser};Password={dataStorageType.DatabasePassword};";
                             optionsBuilder.UseNpgsql(connectionString);
                             break;
                         case DatabaseProviderType.MySql:
-                            connectionString = $"Server={dataStorageType.DatabaseHost};Database=RelayDb;User={dataStorageType.DatabaseUser};Password={dataStorageType.DatabasePassword};";
-                            optionsBuilder.UseMySql(connectionString,
-                                new MySqlServerVersion(new Version(8, 0, 36))); // specify your MySQL version
+                            optionsBuilder.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 36))); // specify your MySQL version
                             break;
 
                     }
