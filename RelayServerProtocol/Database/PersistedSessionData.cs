@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace RelayServerProtocol.Database {
     public class PersistedSessionData {
         string _sessionUserId;
@@ -8,6 +10,8 @@ namespace RelayServerProtocol.Database {
         /// <summary>
         /// Session ID is decided by the client. Acts as the servers way to identify someone unless they change their identifier.
         /// </summary>
+        /// 
+        [Key]
         public string SessionId { get => _sessionUserId; set => _sessionUserId = value; }
         /// <summary>
         /// Whether the session id associated with this object is banned from access.

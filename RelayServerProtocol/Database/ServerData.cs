@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.ComponentModel.DataAnnotations;
 using static RelayUploadProtocol.Structs;
 
 namespace RelayServerProtocol.Database {
@@ -15,6 +16,9 @@ namespace RelayServerProtocol.Database {
         ServerContentRating _serverContent;
         ServerContentType _serverContentType;
         int _synchronizationContext = -1;
+        
+        [Key]
+        public int Id { get; set; } = 1; // always one row
 
         public ConcurrentDictionary<string, PersistedSessionData> PersistedSessionData { get => _persistedSessionData; set => _persistedSessionData = value; }
         public string MasterKeyHash { get => _masterKeyHash; set => _masterKeyHash = value; }

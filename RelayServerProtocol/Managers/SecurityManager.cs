@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using RelayCommonData;
 using RelayServerProtocol.Database;
@@ -17,35 +18,63 @@ namespace RelayServerProtocol.Managers
             _instance = this;
         }
 
-        DataStorageType LoadDataConfig()
+        DataConfig LoadDataConfig()
         {
             var dataConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "dataConfig.json");
             if (File.Exists(dataConfigPath))
             {
-                return JsonConvert.DeserializeObject<DataConfig>(File.ReadAllText(dataConfigPath)).DataStorageType;
+                return JsonConvert.DeserializeObject<DataConfig>(File.ReadAllText(dataConfigPath));
             }
 
-            return DataStorageType.Json;
+            return new DataConfig();
         }
 
         public IDataManager ConfigureData()
         {
             var dataStorageType = LoadDataConfig();
-            switch (dataStorageType)
+
+            switch (dataStorageType.DataStorageType)
             {
                 case DataStorageType.Json:
                     return new JsonDataManager();
-                case DataStorageType.SqLite:
-                    return new SqLiteDataManager();
-                case DataStorageType.PostgressSql:
-                    return new PostgressSqlDataManager();
-                case DataStorageType.MySql:
-                    return new MySqlDataManager();
-                case DataStorageType.MsSql:
-                    return new MsSqlDataManager();
+
+                case DataStorageType.EntityFramework:
+                    var optionsBuilder = new DbContextOptionsBuilder<ServerDatabasContext>();
+
+                    // Pick based on config
+                    var provider = dataStorageType.DatabaseProviderType;
+                    var connectionString = "";
+
+
+                    switch (provider)
+                    {
+                        case DatabaseProviderType.SqLite:
+                            connectionString = $"Data Source={Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "mainConfig.db")}";
+                            optionsBuilder.UseSqlite(connectionString);
+                            break;
+                        case DatabaseProviderType.SqlServer:
+                            connectionString = $"Server={dataStorageType.DatabaseHost};Database=RelayDb;Trusted_Connection=True;";
+                            optionsBuilder.UseSqlServer(connectionString);
+                            break;
+                        case DatabaseProviderType.Postgres:
+                            connectionString = $"Host={dataStorageType.DatabaseHost};Database=RelayDb;Username={dataStorageType.DatabaseUser};Password={dataStorageType.DatabasePassword};";
+                            optionsBuilder.UseNpgsql(connectionString);
+                            break;
+                        case DatabaseProviderType.MySql:
+                            connectionString = $"Server={dataStorageType.DatabaseHost};Database=RelayDb;User={dataStorageType.DatabaseUser};Password={dataStorageType.DatabasePassword};";
+                            optionsBuilder.UseMySql(connectionString,
+                                new MySqlServerVersion(new Version(8, 0, 36))); // specify your MySQL version
+                            break;
+
+                    }
+
+                    var db = new ServerDatabasContext(optionsBuilder.Options);
+                    return new EntityFrameworkDataManager(db);
             }
+
             return null;
         }
+
 
         public KeyValuePair<bool, ServerRole> Authenticate(string sessionId, string authenticationToken)
         {

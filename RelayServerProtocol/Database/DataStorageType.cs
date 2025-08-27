@@ -9,9 +9,6 @@ namespace RelayServerProtocol.Database
     public enum DataStorageType
     {
         Json,
-        SqLite,
-        PostgressSql,
-        MySql,
-        MsSql
+        EntityFramework
     }
 }
