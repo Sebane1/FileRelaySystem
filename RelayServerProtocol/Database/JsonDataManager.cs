@@ -62,7 +62,7 @@ namespace RelayServerProtocol.Database
 
         public Structs.ServerContentRating GetServerContent()
         {
-            return _serverData.ServerContent;
+            return _serverData.ServerContentRating;
         }
 
         public Structs.ServerContentType GetServerContentType()
@@ -145,6 +145,36 @@ namespace RelayServerProtocol.Database
             var data = _serverData.PersistedSessionData[sessionId];
             data.Banned = true;
             data.HashedAccessKey = "";
+            PersistData();
+        }
+
+        public void SetServerRules(string rules)
+        {
+            _serverData.ServerRules = rules;
+            PersistData();
+        }
+
+        public void SetServerDescription(string description)
+        {
+            _serverData.ServerDescription = description;
+            PersistData();
+        }
+
+        public void SetAgeGroup(Structs.AgeGroup group)
+        {
+            _serverData.AgeGroup = group;
+            PersistData();
+        }
+
+        public void SetServerContent(Structs.ServerContentRating rating)
+        {
+            _serverData.ServerContentRating = rating;
+            PersistData();
+        }
+
+        public void SetServerContentType(Structs.ServerContentType type)
+        {
+            _serverData.ServerContentType = type;
             PersistData();
         }
     }

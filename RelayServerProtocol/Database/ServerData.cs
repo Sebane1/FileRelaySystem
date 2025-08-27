@@ -28,7 +28,7 @@ namespace RelayServerProtocol.Database {
         public string ServerRules { get => _serverRules; set => _serverRules = value; }
         public string ServerDescription { get => _serverDescription; set => _serverDescription = value; }
         public AgeGroup AgeGroup { get => _ageGroup; set => _ageGroup = value; }
-        public ServerContentRating ServerContent { get => _serverContent; set => _serverContent = value; }
+        public ServerContentRating ServerContentRating { get => _serverContent; set => _serverContent = value; }
         public ServerContentType ServerContentType { get => _serverContentType; set => _serverContentType = value; }
 
     }

@@ -1,3 +1,4 @@
+using RelayUploadProtocol;
 using static RelayUploadProtocol.Structs;
 
 namespace RelayServerProtocol.Database
@@ -16,10 +17,15 @@ namespace RelayServerProtocol.Database
         public void SetHashedAccessKey(string sessionId, string keyHash);
         public void CheckOrCreateSessionUser(string sessionId);
         public string GetServerRules();
+        public void SetServerRules(string rules);
         public string GetServerDescription();
+        public void SetServerDescription(string description);
         public void BanUser(string sessionId);
         public AgeGroup GetAgeGroup();
+        public void SetAgeGroup(Structs.AgeGroup group);
         public ServerContentRating GetServerContent();
+        public void SetServerContent(Structs.ServerContentRating rating);
         public ServerContentType GetServerContentType();
+        public void SetServerContentType(Structs.ServerContentType type);
     }
 }
