@@ -1,36 +1,37 @@
-﻿using FileRelaySystem;
+using FileSystemRelay;
+using RelayServerProtocol.TemporaryData;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Numerics;
 using static RelayUploadProtocol.Structs;
 
-namespace FileSystemRelay {
+namespace RelayServerProtocol.Managers {
     public class ReceiveFromClientManager : StreamUtilities {
         private HttpListenerContext client;
-        private FileManager fileManager;
-        public ReceiveFromClientManager(HttpListenerContext client, FileManager fileManager) {
+        private TemporaryFileManager fileManager;
+        public ReceiveFromClientManager(HttpListenerContext client, TemporaryFileManager fileManager) {
             this.client = client;
             this.fileManager = fileManager;
         }
 
         public void ReceiveFromClient() {
             try {
-                using (BinaryReader reader = new BinaryReader(client.Request.InputStream)) {
-                    using (BinaryWriter writer = new BinaryWriter(client.Response.OutputStream)) {
-                        string sessionId = reader.ReadString();
-                        string authenticationToken = reader.ReadString();
+                using (var reader = new BinaryReader(client.Request.InputStream)) {
+                    using (var writer = new BinaryWriter(client.Response.OutputStream)) {
+                        var sessionId = reader.ReadString();
+                        var authenticationToken = reader.ReadString();
                         var authenticationData = SecurityManager.Instance.Authenticate(sessionId, authenticationToken);
                         if (authenticationData.Key) {
-                            string targetValue = reader.ReadString();
-                            int requestType = reader.ReadInt32();
+                            var targetValue = reader.ReadString();
+                            var requestType = reader.ReadInt32();
                             switch ((RequestType)requestType) {
                                 case RequestType.AddTemporaryFile:
-                                    long length = reader.ReadInt64();
-                                    MemoryStream memoryStream = new MemoryStream();
+                                    var length = reader.ReadInt64();
+                                    var memoryStream = new MemoryStream();
                                     CopyStream(reader.BaseStream, memoryStream, (int)length);
                                     Console.WriteLine(sessionId + " uploading " + targetValue);
-                                    int destructionTime = reader.ReadInt32();
+                                    var destructionTime = reader.ReadInt32();
                                     lock (fileManager) {
                                         var fileIdentifier = new FileIdentifier(targetValue, memoryStream, Math.Clamp(destructionTime, 0, 60000));
                                         fileIdentifier.OnDisposed += delegate {
@@ -47,10 +48,10 @@ namespace FileSystemRelay {
                                 case RequestType.AddPersistedFile:
                                     length = reader.ReadInt64();
                                     Console.WriteLine(sessionId + " uploading " + targetValue);
-                                    string directory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cdn");
+                                    var directory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cdn");
                                     Directory.CreateDirectory(directory);
-                                    string filePath = Path.Combine(directory, targetValue + ".hex");
-                                    using (FileStream fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write)) {
+                                    var filePath = Path.Combine(directory, targetValue + ".hex");
+                                    using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write)) {
                                         CopyStream(reader.BaseStream, fileStream, (int)length);
                                     }
                                     Console.WriteLine(sessionId + " persisted " + targetValue);
@@ -80,13 +81,13 @@ namespace FileSystemRelay {
             }
         }
         private void GetPersistedFile(string hash, BinaryWriter writer) {
-            Stopwatch stopwatch = new Stopwatch();
+            var stopwatch = new Stopwatch();
             stopwatch.Start();
             Console.WriteLine("Client requesting " + hash);
             try {
-                string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cdn", hash + ".hex");
+                var filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cdn", hash + ".hex");
                 if (File.Exists(filePath)) {
-                    using (FileStream fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read)) {
+                    using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read)) {
                         CopyStream(fileStream, writer.BaseStream, (int)fileStream.Length);
                         writer.Flush();
                     }
@@ -98,7 +99,7 @@ namespace FileSystemRelay {
             }
         }
         private void GetTemporaryFile(string hash, BinaryWriter writer, int requestType) {
-            Stopwatch stopwatch = new Stopwatch();
+            var stopwatch = new Stopwatch();
             stopwatch.Start();
             Console.WriteLine("Client requesting " + hash);
             FileIdentifier identifier = null;

@@ -1,8 +1,9 @@
-﻿using System.Collections.Concurrent;
-using static FileSystemRelay.FileIdentifier;
+using RelayServerProtocol.TemporaryData;
+using System.Collections.Concurrent;
+using static RelayServerProtocol.TemporaryData.FileIdentifier;
 
-namespace FileSystemRelay {
-    public class FileManager {
+namespace RelayServerProtocol.Managers {
+    public class TemporaryFileManager {
         volatile ConcurrentDictionary<string, FileIdentifier> files = new ConcurrentDictionary<string, FileIdentifier>();
 
         public void AddTemporaryFile(FileIdentifier identifier) {

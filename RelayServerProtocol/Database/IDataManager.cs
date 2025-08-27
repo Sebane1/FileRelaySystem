@@ -1,7 +1,6 @@
-using FileRelaySystem;
 using static RelayUploadProtocol.Structs;
 
-namespace RelayServerProtocol
+namespace RelayServerProtocol.Database
 {
     public interface IDataManager
     {

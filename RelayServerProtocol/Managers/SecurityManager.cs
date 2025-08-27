@@ -1,8 +1,8 @@
 using Newtonsoft.Json;
 using RelayCommonData;
-using RelayServerProtocol;
+using RelayServerProtocol.Database;
 
-namespace FileRelaySystem
+namespace RelayServerProtocol.Managers
 {
     public class SecurityManager
     {
@@ -19,7 +19,7 @@ namespace FileRelaySystem
 
         DataStorageType LoadDataConfig()
         {
-            string dataConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "dataConfig.json");
+            var dataConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "dataConfig.json");
             if (File.Exists(dataConfigPath))
             {
                 return JsonConvert.DeserializeObject<DataConfig>(File.ReadAllText(dataConfigPath)).DataStorageType;
@@ -49,9 +49,9 @@ namespace FileRelaySystem
 
         public KeyValuePair<bool, ServerRole> Authenticate(string sessionId, string authenticationToken)
         {
-            string authenticationHash = Hashing.SHA512Hash(authenticationToken);
-            string masterKeyAuthenticationHash = Hashing.SHA512Hash(authenticationToken + _dataManager.GetMasterKeySalt);
-            bool authenticationSuccess = false;
+            var authenticationHash = Hashing.SHA512Hash(authenticationToken);
+            var masterKeyAuthenticationHash = Hashing.SHA512Hash(authenticationToken + _dataManager.GetMasterKeySalt);
+            var authenticationSuccess = false;
             if (masterKeyAuthenticationHash == _dataManager.GetMasterKeyHash())
             {
                 _dataManager.CheckOrCreateSessionUser(sessionId);

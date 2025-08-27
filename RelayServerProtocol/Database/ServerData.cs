@@ -2,7 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using static RelayUploadProtocol.Structs;
 
-namespace FileRelaySystem {
+namespace RelayServerProtocol.Database {
     public class ServerData {
         ConcurrentDictionary<string, PersistedSessionData> _persistedSessionData = new ConcurrentDictionary<string, PersistedSessionData>();
         string _masterKeyHash = "";

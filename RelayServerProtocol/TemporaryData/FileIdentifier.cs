@@ -1,7 +1,7 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Numerics;
 
-namespace FileSystemRelay {
+namespace RelayServerProtocol.TemporaryData {
     public class FileIdentifier : IDisposable {
         string identifier;
         MemoryStream memoryStream;

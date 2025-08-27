@@ -1,6 +1,4 @@
-﻿using RelayServerProtocol;
-
-namespace FileRelaySystem
+namespace RelayServerProtocol.Database
 {
     internal class PostgressSqlDataManager : IDataManager
     {

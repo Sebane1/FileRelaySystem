@@ -1,4 +1,4 @@
-﻿namespace FileRelaySystem {
+namespace RelayServerProtocol.Database {
     public class PersistedSessionData {
         string _sessionUserId;
         string _hashedAccessKey;

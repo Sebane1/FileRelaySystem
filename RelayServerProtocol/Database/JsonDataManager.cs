@@ -1,4 +1,3 @@
-using FileRelaySystem;
 using Newtonsoft.Json;
 using RelayCommonData;
 using RelayUploadProtocol;
@@ -9,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RelayServerProtocol
+namespace RelayServerProtocol.Database
 {
     public class JsonDataManager : IDataManager
     {
@@ -37,7 +36,7 @@ namespace RelayServerProtocol
 
         public string CreateNewUnclaimedAccessToken()
         {
-            string code = Guid.NewGuid().ToString();
+            var code = Guid.NewGuid().ToString();
             _serverData.UnclaimedKeyHashes.Add(Hashing.SHA512Hash(code));
             PersistData();
             return code;
@@ -103,7 +102,7 @@ namespace RelayServerProtocol
         }
         public void LoadData()
         {
-            string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "mainConfig.json");
+            var configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "mainConfig.json");
             if (File.Exists(configPath))
             {
                 try
@@ -126,7 +125,7 @@ namespace RelayServerProtocol
         }
         public void PersistData()
         {
-            string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "mainConfig.json");
+            var configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "mainConfig.json");
             File.WriteAllText(configPath, JsonConvert.SerializeObject(_serverData, Formatting.Indented));
         }
 
