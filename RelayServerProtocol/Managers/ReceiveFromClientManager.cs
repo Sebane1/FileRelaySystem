@@ -2,8 +2,6 @@ using FileSystemRelay;
 using RelayServerProtocol.TemporaryData;
 using System.Diagnostics;
 using System.Net;
-using System.Net.Sockets;
-using System.Numerics;
 using static RelayUploadProtocol.Structs;
 
 namespace RelayServerProtocol.Managers {
