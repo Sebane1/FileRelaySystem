@@ -18,6 +18,7 @@ namespace FileRelaySystem {
             string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "mainConfig.json");
             File.WriteAllText(configPath, JsonConvert.SerializeObject(_securityManagerData, Formatting.Indented));
         }
+
         public void LoadData() {
             string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "mainConfig.json");
             if (File.Exists(configPath)) {
@@ -33,6 +34,7 @@ namespace FileRelaySystem {
                 _securityManagerData = new SecurityManagerData();
             }
         }
+
         public bool CheckIfPasswordExists() {
             return !string.IsNullOrEmpty(_securityManagerData.MasterKeyHash);
         }
@@ -86,6 +88,7 @@ namespace FileRelaySystem {
             PersistData();
             return code;
         }
+
         public bool BanSessionId(string sessionId, string sessionIdToBan) {
             if (_securityManagerData.PersistedSessionData.ContainsKey(sessionIdToBan)) {
                 var userIssuingBan = _securityManagerData.PersistedSessionData[sessionIdToBan];
