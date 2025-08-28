@@ -4,43 +4,50 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RelayUploadProtocol {
-    public class Structs {
-        public enum AgeGroup {
+namespace RelayUploadProtocol
+{
+    public class Structs
+    {
+        public enum AgeGroup
+        {
             Everyone = 0,
             AdultsOnly = 1
         }
-        public enum ServerContentRating {
+        public enum ServerContentRating
+        {
             SafeForWorkOnly = 0,
             NotSafeForWork = 1,
         }
-        public enum ServerContentType {
+        public enum ServerContentType
+        {
             General = 0,
             Outfits = 1,
             Memes = 2,
             Other = 3
         }
-        public enum RequestType {
+        public enum RequestType
+        {
             AddTemporaryFile = 0,
             GetTemporaryFile = 1,
             ClearState = 2,
             AddPersistedFile = 3,
             GetPersistedFile = 4,
-            BanUser = 5,
-            IssueAccessToken = 6,
-            GetServerAlias = 7,
-            SetServerAlias = 8,
-            GetServerRules = 9,
-            SetServerRules = 10,
-            GetServerDescription = 11,
-            SetServerDescription = 12,
-            GetAgeGroup = 13,
-            SetAgeGroup = 14,
-            GetContentRating = 15,
-            SetContentRating = 16,
-            GetServerContent = 17,
-            SetServerContentType = 18,
-            GetPublicServerInfo = 19
+            CheckPersistedFileChanged = 5,
+            BanUser = 6,
+            IssueAccessToken = 7,
+            GetServerAlias = 8,
+            SetServerAlias = 9,
+            GetServerRules = 10,
+            SetServerRules = 11,
+            GetServerDescription = 12,
+            SetServerDescription = 13,
+            GetAgeGroup = 14,
+            SetAgeGroup = 15,
+            GetContentRating = 16,
+            SetContentRating = 17,
+            GetServerContent = 18,
+            SetServerContentType = 19,
+            GetPublicServerInfo = 20
         }
     }
 }
