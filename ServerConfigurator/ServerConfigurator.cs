@@ -16,7 +16,7 @@ namespace ServerConfigurator
 
         }
 
-        private void ServerConfigurator_Load(object sender, EventArgs e)
+        private async void ServerConfigurator_Load(object sender, EventArgs e)
         {
             var ageGroups = Enum.GetNames<AgeGroup>();
             var contentRatings = Enum.GetNames<ServerContentRating>();
@@ -24,6 +24,14 @@ namespace ServerConfigurator
             ageGroupComboBox.Items.AddRange(ageGroups);
             serverContentRatingComboBox.Items.AddRange(contentRatings);
             serverContentTypeComboBox.Items.AddRange(serverContent);
+
+
+            serverNameTextBox.Text = await ClientManager.GetServerAlias("root");
+            serverRulesTextBox.Text = await ClientManager.GetServerRules("root");
+            serverDescriptionTextBox.Text = await ClientManager.GetServerDescription("root");
+            ageGroupComboBox.SelectedIndex = await ClientManager.GetServerAgeGroup("root");
+            serverContentRatingComboBox.SelectedIndex = await ClientManager.GetServerContentRating("root");
+            serverContentTypeComboBox.SelectedIndex = await ClientManager.GetServerContentType("root");
         }
 
         private void testServerButton_Click(object sender, EventArgs e)

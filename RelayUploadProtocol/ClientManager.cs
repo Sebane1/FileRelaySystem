@@ -293,6 +293,36 @@ namespace RelayUploadProtocol
                 }
             }
         }
+        private static async Task<int> GetServerEnum(string sessionId, string authenticationToken, int requestType)
+        {
+            string serverUrl = "http://" + ipAddress + ":5105";
+            using (var ms = new MemoryStream())
+            using (var writer = new BinaryWriter(ms, Encoding.UTF8, leaveOpen: true))
+            {
+                // Write protocol header
+                writer.Write(sessionId);
+                writer.Write(authenticationToken);
+                writer.Write(requestType);
+
+                writer.Flush();
+                ms.Position = 0;
+
+                // Send raw stream
+                using (var client = new HttpClient())
+                {
+                    var content = new StreamContent(ms);
+                    content.Headers.Add("Content-Type", "application/octet-stream");
+
+                    HttpResponseMessage response = await client.PostAsync(serverUrl, content);
+
+                    Console.WriteLine($"Response: {response.StatusCode}");
+                    using (BinaryReader reader = new BinaryReader(response.Content.ReadAsStream()))
+                    {
+                        return reader.ReadInt32();
+                    }
+                }
+            }
+        }
         public static async Task SetServerAgeGroup(string sessionId, string authenticationToken, int selectedIndex)
         {
             await SetServerEnum(sessionId, authenticationToken, (int)RequestType.SetAgeGroup, selectedIndex);
@@ -306,6 +336,21 @@ namespace RelayUploadProtocol
         public static async Task SetServerContentType(string sessionId, string authenticationToken, int selectedIndex)
         {
             await SetServerEnum(sessionId, authenticationToken, (int)RequestType.SetServerContentType, selectedIndex);
+        }
+
+        public static async Task<int> GetServerAgeGroup(string sessionId)
+        {
+            return await GetServerEnum(sessionId, "", (int)RequestType.GetAgeGroup);
+        }
+
+        public static async Task<int> GetServerContentRating(string sessionId)
+        {
+            return await GetServerEnum(sessionId, "", (int)RequestType.GetContentRating);
+        }
+
+        public static async Task<int> GetServerContentType(string sessionId)
+        {
+            return await GetServerEnum(sessionId, "", (int)RequestType.SetServerContentType);
         }
     }
 }

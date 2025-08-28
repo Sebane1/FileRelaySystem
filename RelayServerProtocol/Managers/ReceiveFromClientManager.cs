@@ -18,49 +18,48 @@ namespace RelayServerProtocol.Managers
 
         public void ReceiveFromClient()
         {
-            try
+            using (var reader = new BinaryReader(client.Request.InputStream))
             {
-                using (var reader = new BinaryReader(client.Request.InputStream))
+                using (var writer = new BinaryWriter(client.Response.OutputStream))
                 {
-                    using (var writer = new BinaryWriter(client.Response.OutputStream))
+                    try
                     {
                         var sessionId = reader.ReadString();
                         var authenticationToken = reader.ReadString();
+                        var requestType = reader.ReadInt32();
                         var authenticationData = ServerAccessManager.Instance.Authenticate(sessionId, authenticationToken);
                         if (authenticationData.Key)
                         {
-                            var targetValue = reader.ReadString();
-                            var requestType = reader.ReadInt32();
                             switch ((RequestType)requestType)
                             {
                                 case RequestType.AddTemporaryFile:
-                                    var length = reader.ReadInt64();
-                                    var memoryStream = new MemoryStream();
-                                    CopyStream(reader.BaseStream, memoryStream, (int)length);
-                                    Console.WriteLine(sessionId + " uploading " + targetValue);
-                                    var destructionTime = reader.ReadInt32();
-                                    lock (fileManager)
-                                    {
-                                        var fileIdentifier = new FileIdentifier(targetValue, memoryStream, Math.Clamp(destructionTime, 0, 60000));
-                                        fileIdentifier.OnDisposed += delegate
-                                        {
-                                            fileManager.Remove(targetValue);
-                                        };
-                                        fileManager.AddTemporaryFile(fileIdentifier);
-                                    }
+                                    var targetValue = reader.ReadString();
+                                    AddTemporaryFile(sessionId, targetValue, reader, writer);
                                     Console.WriteLine(sessionId + " received " + targetValue);
                                     break;
                                 case RequestType.GetTemporaryFile:
                                 case RequestType.ClearState:
+                                    targetValue = reader.ReadString();
                                     GetTemporaryFile(targetValue, writer, requestType);
                                     break;
                                 case RequestType.AddPersistedFile:
+                                    targetValue = reader.ReadString();
                                     ServerAccessManager.Instance.AddPersistedFile(sessionId, targetValue, reader, writer);
                                     break;
                                 case RequestType.GetPersistedFile:
+                                    targetValue = reader.ReadString();
                                     GetPersistedFile(targetValue, writer);
                                     break;
+                                case RequestType.CheckIfPersistedFileChanged:
+                                    targetValue = reader.ReadString();
+                                    writer.Write(ServerAccessManager.Instance.CheckIfPersistedFileChanged(sessionId, targetValue, reader, writer));
+                                    break;
+                                case RequestType.CheckIfFileExists:
+                                    targetValue = reader.ReadString();
+                                    writer.Write(ServerAccessManager.Instance.CheckIfFileExists(sessionId, targetValue, reader, writer));
+                                    break;
                                 case RequestType.BanUser:
+                                    targetValue = reader.ReadString();
                                     if (ServerAccessManager.Instance.BanSessionId(sessionId, targetValue))
                                     {
                                         Console.WriteLine(sessionId + " banned " + targetValue);
@@ -77,55 +76,89 @@ namespace RelayServerProtocol.Managers
                                         writer.Write(ServerAccessManager.Instance.GenerateUnclaimedAccessToken());
                                     }
                                     break;
-                                case RequestType.GetServerAlias:
-                                    writer.Write(ServerAccessManager.Instance.GetServerAlias());
-                                    break;
                                 case RequestType.SetServerAlias:
                                     ServerAccessManager.Instance.SetServerAlias(reader.ReadString());
-                                    break;
-                                case RequestType.GetServerRules:
-                                    writer.Write(ServerAccessManager.Instance.GetServerRules());
                                     break;
                                 case RequestType.SetServerRules:
                                     ServerAccessManager.Instance.SetServerRules(reader.ReadString());
                                     break;
-                                case RequestType.GetServerDescription:
-                                    writer.Write(ServerAccessManager.Instance.GetServerDescription());
-                                    break;
                                 case RequestType.SetServerDescription:
                                     ServerAccessManager.Instance.SetServerDescription(reader.ReadString());
-                                    break;
-                                case RequestType.GetAgeGroup:
-                                    writer.Write(ServerAccessManager.Instance.GetAgeGroup());
-                                    break;
-                                case RequestType.SetAgeGroup:
-                                    ServerAccessManager.Instance.SetAgeGroup(reader.ReadInt32());
-                                    break;
-                                case RequestType.GetContentRating:
-                                    writer.Write(ServerAccessManager.Instance.GetContentRating());
                                     break;
                                 case RequestType.SetContentRating:
                                     ServerAccessManager.Instance.SetContentRating(reader.ReadInt32());
                                     break;
-                                case RequestType.GetServerContent:
-                                    writer.Write(ServerAccessManager.Instance.GetServerContentType());
-                                    break;
                                 case RequestType.SetServerContentType:
                                     ServerAccessManager.Instance.SetServerContentType(reader.ReadInt32());
+                                    break;
+                                case RequestType.SetAgeGroup:
+                                    ServerAccessManager.Instance.SetAgeGroup(reader.ReadInt32());
+                                    break;
+
+                            }
+                        }
+                        else
+                        {
+                            // This data doesn't require authentication to access.
+                            // This allows the client use to view what the server is all about before joining.
+                            switch ((RequestType)requestType)
+                            {
+                                case RequestType.GetServerAlias:
+                                    writer.Write(ServerAccessManager.Instance.GetServerAlias());
+                                    break;
+                                case RequestType.GetServerRules:
+                                    writer.Write(ServerAccessManager.Instance.GetServerRules());
+                                    break;
+                                case RequestType.GetServerDescription:
+                                    writer.Write(ServerAccessManager.Instance.GetServerDescription());
+                                    break;
+                                case RequestType.GetAgeGroup:
+                                    writer.Write(ServerAccessManager.Instance.GetAgeGroup());
+                                    break;
+                                case RequestType.GetContentRating:
+                                    writer.Write(ServerAccessManager.Instance.GetContentRating());
+                                    break;
+                                case RequestType.GetServerContent:
+                                    writer.Write(ServerAccessManager.Instance.GetServerContentType());
                                     break;
                                 case RequestType.GetPublicServerInfo:
                                     writer.Write(ServerAccessManager.Instance.GetPublicServerInfo());
                                     break;
+                                default:
+                                    client.Response.StatusCode = 401;
+                                    break;
                             }
                         }
                     }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                        client.Response.StatusCode = 400;
+                        client.Response.Close();
+                    }
                 }
             }
-            catch (Exception e)
+        }
+
+
+        private void AddTemporaryFile(string sessionId, string targetValue, BinaryReader reader, BinaryWriter writer)
+        {
+            var length = reader.ReadInt64();
+            var memoryStream = new MemoryStream();
+            CopyStream(reader.BaseStream, memoryStream, (int)length);
+            Console.WriteLine(sessionId + " uploading " + targetValue);
+            var destructionTime = reader.ReadInt32();
+            lock (fileManager)
             {
-                Console.WriteLine(e.Message);
+                var fileIdentifier = new FileIdentifier(targetValue, memoryStream, Math.Clamp(destructionTime, 0, 60000));
+                fileIdentifier.OnDisposed += delegate
+                {
+                    fileManager.Remove(targetValue);
+                };
+                fileManager.AddTemporaryFile(fileIdentifier);
             }
         }
+
         private void GetPersistedFile(string hash, BinaryWriter writer)
         {
             var stopwatch = new Stopwatch();

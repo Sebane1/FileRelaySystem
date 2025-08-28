@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using RelayCommonData;
 using RelayServerProtocol.Database;
+using System.IO;
 using static RelayUploadProtocol.Structs;
 
 namespace RelayServerProtocol.Managers
@@ -186,22 +187,22 @@ namespace RelayServerProtocol.Managers
             _dataManager.SetServerDescription(description);
         }
 
-        internal void SetAgeGroup(int ageGroupEnum)
+        public void SetAgeGroup(int ageGroupEnum)
         {
             _dataManager.SetAgeGroup((AgeGroup)ageGroupEnum);
         }
 
-        internal void SetContentRating(int contentRatingEnum)
+        public void SetContentRating(int contentRatingEnum)
         {
             _dataManager.SetServerContentRating((ServerContentRating)contentRatingEnum);
         }
 
-        internal void SetServerContentType(int serverContentType)
+        public void SetServerContentType(int serverContentType)
         {
             _dataManager.SetServerContentType((ServerContentType)serverContentType);
         }
 
-        internal void AddPersistedFile(string sessionId, string targetValue, BinaryReader reader, BinaryWriter writer)
+        public void AddPersistedFile(string sessionId, string targetValue, BinaryReader reader, BinaryWriter writer)
         {
             var length = reader.ReadInt64();
             Console.WriteLine(sessionId + " uploading " + targetValue);
@@ -213,6 +214,23 @@ namespace RelayServerProtocol.Managers
                 CopyStream(reader.BaseStream, fileStream, (int)length);
             }
             Console.WriteLine(sessionId + " persisted " + targetValue);
+        }
+
+        public bool CheckIfPersistedFileChanged(string sessionId, string targetValue, BinaryReader reader, BinaryWriter writer)
+        {
+            var directory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cdn");
+            Directory.CreateDirectory(directory);
+            var filePath = Path.Combine(directory, targetValue + ".hex");
+            var dateTime = new DateTime(reader.ReadInt64());
+            return File.GetLastWriteTimeUtc(filePath) > dateTime;
+        }
+
+        public bool CheckIfFileExists(string sessionId, string targetValue, BinaryReader reader, BinaryWriter writer)
+        {
+            var directory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cdn");
+            Directory.CreateDirectory(directory);
+            var filePath = Path.Combine(directory, targetValue + ".hex");
+            return File.Exists(filePath);
         }
     }
 }
