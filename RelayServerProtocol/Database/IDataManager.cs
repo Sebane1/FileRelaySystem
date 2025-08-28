@@ -25,10 +25,10 @@ namespace RelayServerProtocol.Database
         public void SetServerDescription(string description);
         public void BanUser(string sessionId);
         public AgeGroup GetAgeGroup();
-        public void SetAgeGroup(Structs.AgeGroup group);
+        public void SetAgeGroup(AgeGroup group);
         public ServerContentRating GetServerContentRating();
-        public void SetServerContentRating(Structs.ServerContentRating rating);
+        public void SetServerContentRating(ServerContentRating rating);
         public ServerContentType GetServerContentType();
-        public void SetServerContentType(Structs.ServerContentType type);
+        public void SetServerContentType(ServerContentType type);
     }
 }

@@ -93,6 +93,7 @@ namespace RelayServerProtocol.Database
         public void RemoveUnclaimedAuthenticationKeyHash(string authenticationHash)
         {
             _serverData.UnclaimedKeyHashes.Remove(authenticationHash);
+            PersistData();
         }
         public void LoadData()
         {
@@ -120,6 +121,13 @@ namespace RelayServerProtocol.Database
         public void PersistData()
         {
             var configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "mainConfig.json");
+            var configPathBackup = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "mainConfig_backup.json");
+
+            if (File.Exists(configPath))
+            {
+                File.Copy(configPath, configPathBackup, true);
+            }
+
             File.WriteAllText(configPath, JsonConvert.SerializeObject(_serverData, Formatting.Indented));
         }
 
@@ -176,6 +184,21 @@ namespace RelayServerProtocol.Database
         {
             _serverData.ServerContentType = type;
             PersistData();
+        }
+
+        public void SetSynchronizationContext(string synchronizationContext)
+        {
+            _serverData.SynchronizationContext = synchronizationContext;
+        }
+
+        public string GetServerAlias()
+        {
+            return _serverData.ServerAlias;
+        }
+
+        public void SetServerAlias(string alias)
+        {
+            _serverData.ServerAlias = alias;
         }
     }
 }
