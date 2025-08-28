@@ -39,7 +39,7 @@ namespace RelayUploadProtocol {
             GetContentRating = 15,
             SetContentRating = 16,
             GetServerContent = 17,
-            SetServerContent = 18,
+            SetServerContentType = 18,
             GetPublicServerInfo = 19
         }
     }

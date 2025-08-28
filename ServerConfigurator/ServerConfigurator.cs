@@ -2,7 +2,8 @@ using Microsoft.VisualBasic.ApplicationServices;
 using RelayUploadProtocol;
 using static RelayUploadProtocol.Structs;
 
-namespace ServerConfigurator {
+namespace ServerConfigurator
+{
     public partial class ServerConfigurator : Form
     {
         public ServerConfigurator()
@@ -21,7 +22,7 @@ namespace ServerConfigurator {
             var contentRatings = Enum.GetNames<ServerContentRating>();
             var serverContent = Enum.GetNames<ServerContentType>();
             ageGroupComboBox.Items.AddRange(ageGroups);
-            serverContentComboBox.Items.AddRange(contentRatings);
+            serverContentRatingComboBox.Items.AddRange(contentRatings);
             serverContentTypeComboBox.Items.AddRange(serverContent);
         }
 
@@ -30,9 +31,14 @@ namespace ServerConfigurator {
             ClientManager.PutPersistedFile("root", "artemis", "cake", @"C:\Users\stel9\Pictures\AMF.png");
         }
 
-        private void saveSettingsButton_Click(object sender, EventArgs e)
+        private async void saveSettingsButton_Click(object sender, EventArgs e)
         {
-
+            await ClientManager.SetServerAlias("root", "artemis", serverNameTextBox.Text);
+            await ClientManager.SetServerRules("root", "artemis", serverRulesTextBox.Text);
+            await ClientManager.SetServerDescription("root", "artemis", serverDescriptionTextBox.Text);
+            await ClientManager.SetServerAgeGroup("root", "artemis", ageGroupComboBox.SelectedIndex);
+            await ClientManager.SetServerContentRating("root", "artemis", serverContentRatingComboBox.SelectedIndex);
+            await ClientManager.SetServerContentType("root", "artemis", serverContentTypeComboBox.SelectedIndex);
         }
     }
 }

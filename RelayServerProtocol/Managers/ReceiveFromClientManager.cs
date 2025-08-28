@@ -110,7 +110,7 @@ namespace RelayServerProtocol.Managers
                                 case RequestType.GetServerContent:
                                     writer.Write(ServerAccessManager.Instance.GetServerContentType());
                                     break;
-                                case RequestType.SetServerContent:
+                                case RequestType.SetServerContentType:
                                     ServerAccessManager.Instance.SetServerContentType(reader.ReadInt32());
                                     break;
                                 case RequestType.GetPublicServerInfo:

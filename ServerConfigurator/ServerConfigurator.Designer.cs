@@ -24,16 +24,16 @@ namespace ServerConfigurator {
         /// </summary>
         private void InitializeComponent()
         {
-            serverRules = new TextBox();
+            serverRulesTextBox = new TextBox();
             ageGroupComboBox = new ComboBox();
-            serverContentComboBox = new ComboBox();
+            serverContentRatingComboBox = new ComboBox();
             serverContentTypeComboBox = new ComboBox();
             ageGroupLabel = new Label();
             label1 = new Label();
             label2 = new Label();
             label3 = new Label();
             label4 = new Label();
-            textBox1 = new TextBox();
+            serverDescriptionTextBox = new TextBox();
             runServerButton = new Button();
             saveSettingsButton = new Button();
             testServerButton = new Button();
@@ -41,14 +41,14 @@ namespace ServerConfigurator {
             label5 = new Label();
             SuspendLayout();
             // 
-            // serverRules
+            // serverRulesTextBox
             // 
-            serverRules.Location = new Point(12, 126);
-            serverRules.Multiline = true;
-            serverRules.Name = "serverRules";
-            serverRules.Size = new Size(375, 129);
-            serverRules.TabIndex = 0;
-            serverRules.TextChanged += serverRules_TextChanged;
+            serverRulesTextBox.Location = new Point(12, 126);
+            serverRulesTextBox.Multiline = true;
+            serverRulesTextBox.Name = "serverRulesTextBox";
+            serverRulesTextBox.Size = new Size(375, 129);
+            serverRulesTextBox.TabIndex = 0;
+            serverRulesTextBox.TextChanged += serverRules_TextChanged;
             // 
             // ageGroupComboBox
             // 
@@ -60,11 +60,11 @@ namespace ServerConfigurator {
             // 
             // serverContentComboBox
             // 
-            serverContentComboBox.FormattingEnabled = true;
-            serverContentComboBox.Location = new Point(139, 65);
-            serverContentComboBox.Name = "serverContentComboBox";
-            serverContentComboBox.Size = new Size(121, 23);
-            serverContentComboBox.TabIndex = 3;
+            serverContentRatingComboBox.FormattingEnabled = true;
+            serverContentRatingComboBox.Location = new Point(139, 65);
+            serverContentRatingComboBox.Name = "serverContentComboBox";
+            serverContentRatingComboBox.Size = new Size(121, 23);
+            serverContentRatingComboBox.TabIndex = 3;
             // 
             // serverContentTypeComboBox
             // 
@@ -119,13 +119,13 @@ namespace ServerConfigurator {
             label4.TabIndex = 10;
             label4.Text = "Server Description";
             // 
-            // textBox1
+            // serverDescriptionTextBox
             // 
-            textBox1.Location = new Point(12, 293);
-            textBox1.Multiline = true;
-            textBox1.Name = "textBox1";
-            textBox1.Size = new Size(375, 129);
-            textBox1.TabIndex = 9;
+            serverDescriptionTextBox.Location = new Point(12, 293);
+            serverDescriptionTextBox.Multiline = true;
+            serverDescriptionTextBox.Name = "serverDescriptionTextBox";
+            serverDescriptionTextBox.Size = new Size(375, 129);
+            serverDescriptionTextBox.TabIndex = 9;
             // 
             // runServerButton
             // 
@@ -183,15 +183,15 @@ namespace ServerConfigurator {
             Controls.Add(saveSettingsButton);
             Controls.Add(runServerButton);
             Controls.Add(label4);
-            Controls.Add(textBox1);
+            Controls.Add(serverDescriptionTextBox);
             Controls.Add(label3);
             Controls.Add(label2);
             Controls.Add(label1);
             Controls.Add(ageGroupLabel);
             Controls.Add(serverContentTypeComboBox);
-            Controls.Add(serverContentComboBox);
+            Controls.Add(serverContentRatingComboBox);
             Controls.Add(ageGroupComboBox);
-            Controls.Add(serverRules);
+            Controls.Add(serverRulesTextBox);
             Name = "ServerConfigurator";
             Text = "Server Configurator";
             TopMost = true;
@@ -202,16 +202,16 @@ namespace ServerConfigurator {
 
         #endregion
 
-        private TextBox serverRules;
+        private TextBox serverRulesTextBox;
         private ComboBox ageGroupComboBox;
-        private ComboBox serverContentComboBox;
+        private ComboBox serverContentRatingComboBox;
         private ComboBox serverContentTypeComboBox;
         private Label ageGroupLabel;
         private Label label1;
         private Label label2;
         private Label label3;
         private Label label4;
-        private TextBox textBox1;
+        private TextBox serverDescriptionTextBox;
         private Button runServerButton;
         private Button saveSettingsButton;
         private Button testServerButton;

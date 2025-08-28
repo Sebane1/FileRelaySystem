@@ -191,20 +191,20 @@ namespace RelayUploadProtocol
             return await GetServerInfo(sessionId, requestType);
         }
 
-        public static async Task<bool> SetServerAlias(string sessionId, string authenticationToken)
+        public static async Task<bool> SetServerAlias(string sessionId, string authenticationToken, string alias)
         {
             int requestType = (int)RequestType.SetServerAlias;
-            return await SetServerInfo(sessionId, authenticationToken, requestType);
+            return await SetServerInfo(sessionId, authenticationToken, requestType, alias);
         }
-        public static async Task<bool> SetServerRules(string sessionId, string authenticationToken)
+        public static async Task<bool> SetServerRules(string sessionId, string authenticationToken, string rules)
         {
             int requestType = (int)RequestType.SetServerRules;
-            return await SetServerInfo(sessionId, authenticationToken, requestType);
+            return await SetServerInfo(sessionId, authenticationToken, requestType, rules);
         }
-        public static async Task<bool> SetServerDescription(string sessionId, string authenticationToken)
+        public static async Task<bool> SetServerDescription(string sessionId, string authenticationToken, string description)
         {
             int requestType = (int)RequestType.SetServerDescription;
-            return await SetServerInfo(sessionId, authenticationToken, requestType);
+            return await SetServerInfo(sessionId, authenticationToken, requestType, description);
         }
 
 
@@ -235,7 +235,7 @@ namespace RelayUploadProtocol
                 }
             }
         }
-        private static async Task<bool> SetServerInfo(string sessionId, string authenticationToken, int requestType)
+        private static async Task<bool> SetServerInfo(string sessionId, string authenticationToken, int requestType, string value)
         {
             string serverUrl = "http://" + ipAddress + ":5105";
             using (var ms = new MemoryStream())
@@ -245,6 +245,7 @@ namespace RelayUploadProtocol
                 writer.Write(sessionId);
                 writer.Write(authenticationToken);
                 writer.Write(requestType);
+                writer.Write(value);
 
                 writer.Flush();
                 ms.Position = 0;
@@ -261,6 +262,50 @@ namespace RelayUploadProtocol
                     return (await response.Content.ReadAsStringAsync()) == "success";
                 }
             }
+        }
+
+
+        private static async Task<bool> SetServerEnum(string sessionId, string authenticationToken, int requestType, int selectedIndex)
+        {
+            string serverUrl = "http://" + ipAddress + ":5105";
+            using (var ms = new MemoryStream())
+            using (var writer = new BinaryWriter(ms, Encoding.UTF8, leaveOpen: true))
+            {
+                // Write protocol header
+                writer.Write(sessionId);
+                writer.Write(authenticationToken);
+                writer.Write(requestType);
+                writer.Write(selectedIndex);
+
+                writer.Flush();
+                ms.Position = 0;
+
+                // Send raw stream
+                using (var client = new HttpClient())
+                {
+                    var content = new StreamContent(ms);
+                    content.Headers.Add("Content-Type", "application/octet-stream");
+
+                    HttpResponseMessage response = await client.PostAsync(serverUrl, content);
+
+                    Console.WriteLine($"Response: {response.StatusCode}");
+                    return (await response.Content.ReadAsStringAsync()) == "success";
+                }
+            }
+        }
+        public static async Task SetServerAgeGroup(string sessionId, string authenticationToken, int selectedIndex)
+        {
+            await SetServerEnum(sessionId, authenticationToken, (int)RequestType.SetAgeGroup, selectedIndex);
+        }
+
+        public static async Task SetServerContentRating(string sessionId, string authenticationToken, int selectedIndex)
+        {
+            await SetServerEnum(sessionId, authenticationToken, (int)RequestType.SetContentRating, selectedIndex);
+        }
+
+        public static async Task SetServerContentType(string sessionId, string authenticationToken, int selectedIndex)
+        {
+            await SetServerEnum(sessionId, authenticationToken, (int)RequestType.SetServerContentType, selectedIndex);
         }
     }
 }
