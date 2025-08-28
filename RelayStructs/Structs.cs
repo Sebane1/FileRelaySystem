@@ -25,6 +25,11 @@ namespace RelayUploadProtocol
             Memes = 2,
             Other = 3
         }
+        public enum ServerUploadAllowance
+        {
+            OneFilePerUser,
+            MultipleFilesPerUser
+        }
         public enum RequestType
         {
             AddTemporaryFile = 0,
@@ -32,22 +37,25 @@ namespace RelayUploadProtocol
             ClearState = 2,
             AddPersistedFile = 3,
             GetPersistedFile = 4,
-            CheckPersistedFileChanged = 5,
-            BanUser = 6,
-            IssueAccessToken = 7,
-            GetServerAlias = 8,
-            SetServerAlias = 9,
-            GetServerRules = 10,
-            SetServerRules = 11,
-            GetServerDescription = 12,
-            SetServerDescription = 13,
-            GetAgeGroup = 14,
-            SetAgeGroup = 15,
-            GetContentRating = 16,
-            SetContentRating = 17,
-            GetServerContent = 18,
-            SetServerContentType = 19,
-            GetPublicServerInfo = 20
+            CheckIfPersistedFileChanged = 5,
+            CheckIfFileExists = 6,
+            BanUser = 7,
+            IssueAccessToken = 8,
+            GetUploadAllowance = 9,
+            SetUploadAllowance = 10,
+            GetServerAlias = 11,
+            SetServerAlias = 12,
+            GetServerRules = 13,
+            SetServerRules = 14,
+            GetServerDescription = 15,
+            SetServerDescription = 16,
+            GetAgeGroup = 17,
+            SetAgeGroup = 18,
+            GetContentRating = 19,
+            SetContentRating = 20,
+            GetServerContent = 21,
+            SetServerContentType = 22,
+            GetPublicServerInfo = 23
         }
     }
 }
