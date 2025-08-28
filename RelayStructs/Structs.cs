@@ -55,7 +55,11 @@ namespace RelayUploadProtocol
             SetContentRating = 20,
             GetServerContent = 21,
             SetServerContentType = 22,
-            GetPublicServerInfo = 23
+            GetSynchronizationContext = 23,
+            SetSynchronizationContext = 25,
+            GetMaxFileSizeInMb = 26,
+            SetMaxFileSizeInMb = 27,
+            GetPublicServerInfo = 28,
         }
     }
 }

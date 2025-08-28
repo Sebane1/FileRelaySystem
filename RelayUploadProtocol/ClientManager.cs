@@ -191,7 +191,6 @@ namespace RelayUploadProtocol
             int requestType = (int)RequestType.GetServerDescription;
             return await GetServerInfo(sessionId, requestType);
         }
-
         public static async Task<bool> SetServerAlias(string sessionId, string authenticationToken, string alias)
         {
             int requestType = (int)RequestType.SetServerAlias;
