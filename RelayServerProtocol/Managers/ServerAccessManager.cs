@@ -1,18 +1,22 @@
+using FileSystemRelay;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using RelayCommonData;
 using RelayServerProtocol.Database;
+using static RelayUploadProtocol.Structs;
 
 namespace RelayServerProtocol.Managers
 {
-    public class SecurityManager
+    public class ServerAccessManager : StreamUtilities
     {
-        private static SecurityManager _instance;
+        private static ServerAccessManager _instance;
 
-        public static SecurityManager Instance { get => _instance; set => _instance = value; }
+        public static ServerAccessManager Instance { get => _instance; set => _instance = value; }
+        public IDataManager DataManager { get => _dataManager; set => _dataManager = value; }
+
         IDataManager _dataManager;
 
-        public SecurityManager()
+        public ServerAccessManager()
         {
             _dataManager = ConfigureData();
             _instance = this;
@@ -131,6 +135,84 @@ namespace RelayServerProtocol.Managers
                 }
             }
             return false;
+        }
+
+        internal string GetServerAlias()
+        {
+            return _dataManager.GetServerAlias();
+        }
+
+        internal string GetServerRules()
+        {
+            return _dataManager.GetServerRules();
+        }
+
+        internal string GetServerDescription()
+        {
+            return _dataManager.GetServerDescription();
+        }
+
+        internal int GetAgeGroup()
+        {
+            return (int)_dataManager.GetAgeGroup();
+        }
+
+        internal int GetContentRating()
+        {
+            return (int)_dataManager.GetServerContentRating();
+        }
+
+        internal int GetServerContentType()
+        {
+            return (int)_dataManager.GetServerContentType();
+        }
+
+        internal bool GetPublicServerInfo()
+        {
+            // To do
+            throw new NotImplementedException();
+        }
+        public void SetServerAlias(string alias)
+        {
+            _dataManager.SetServerAlias(alias);
+        }
+
+        public void SetServerRules(string rules)
+        {
+            _dataManager.SetServerRules(rules);
+        }
+        public void SetServerDescription(string description)
+        {
+            _dataManager.SetServerDescription(description);
+        }
+
+        internal void SetAgeGroup(int ageGroupEnum)
+        {
+            _dataManager.SetAgeGroup((AgeGroup)ageGroupEnum);
+        }
+
+        internal void SetContentRating(int contentRatingEnum)
+        {
+            _dataManager.SetServerContentRating((ServerContentRating)contentRatingEnum);
+        }
+
+        internal void SetServerContentType(int serverContentType)
+        {
+            _dataManager.SetServerContentType((ServerContentType)serverContentType);
+        }
+
+        internal void AddPersistedFile(string sessionId, string targetValue, BinaryReader reader, BinaryWriter writer)
+        {
+            var length = reader.ReadInt64();
+            Console.WriteLine(sessionId + " uploading " + targetValue);
+            var directory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cdn");
+            Directory.CreateDirectory(directory);
+            var filePath = Path.Combine(directory, targetValue + ".hex");
+            using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+            {
+                CopyStream(reader.BaseStream, fileStream, (int)length);
+            }
+            Console.WriteLine(sessionId + " persisted " + targetValue);
         }
     }
 }

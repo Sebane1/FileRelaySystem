@@ -10,12 +10,14 @@ namespace RelayServerProtocol.Database {
         string _masterKeySalt = "";
         List<string> _unclaimedKeyHashes = new List<string>();
 
+        string _serverAlias = "";
         string _serverRules = "";
         string _serverDescription = "";
         AgeGroup _ageGroup;
         ServerContentRating _serverContent;
         ServerContentType _serverContentType;
         int _synchronizationContext = -1;
+
         
         [Key]
         public int Id { get; set; } = 1; // always one row
@@ -30,6 +32,6 @@ namespace RelayServerProtocol.Database {
         public AgeGroup AgeGroup { get => _ageGroup; set => _ageGroup = value; }
         public ServerContentRating ServerContentRating { get => _serverContent; set => _serverContent = value; }
         public ServerContentType ServerContentType { get => _serverContentType; set => _serverContentType = value; }
-
+        public string ServerAlias { get => _serverAlias; set => _serverAlias = value; }
     }
 }

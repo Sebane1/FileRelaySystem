@@ -1,18 +1,22 @@
-﻿using System.Text;
+using System.Text;
 using static RelayUploadProtocol.Structs;
 
-namespace RelayUploadProtocol {
-    public static class ClientManager {
+namespace RelayUploadProtocol
+{
+    public static class ClientManager
+    {
         static string ipAddress = "localhost";
 
         public static string IpAddress { get => ipAddress; set => ipAddress = value; }
 
-        public static async Task<string> GetTemporaryFile(string sessionId, string authenticationToken, string fileId, string outputFolder) {
+        public static async Task<string> GetTemporaryFile(string sessionId, string authenticationToken, string fileId, string outputFolder)
+        {
             string serverUrl = "http://" + ipAddress + ":5105";
             int requestType = (int)RequestType.GetTemporaryFile;
 
             using (var ms = new MemoryStream())
-            using (var writer = new BinaryWriter(ms, Encoding.UTF8, leaveOpen: true)) {
+            using (var writer = new BinaryWriter(ms, Encoding.UTF8, leaveOpen: true))
+            {
                 // Write request header
                 writer.Write(sessionId);
                 writer.Write(authenticationToken);
@@ -21,7 +25,8 @@ namespace RelayUploadProtocol {
                 writer.Flush();
                 ms.Position = 0;
 
-                using (var client = new HttpClient()) {
+                using (var client = new HttpClient())
+                {
                     var content = new StreamContent(ms);
                     content.Headers.Add("Content-Type", "application/octet-stream");
 
@@ -29,9 +34,11 @@ namespace RelayUploadProtocol {
                     response.EnsureSuccessStatusCode();
 
                     using (var responseStream = await response.Content.ReadAsStreamAsync())
-                    using (var reader = new BinaryReader(responseStream)) {
+                    using (var reader = new BinaryReader(responseStream))
+                    {
                         byte successFlag = reader.ReadByte();
-                        if (successFlag == 0) {
+                        if (successFlag == 0)
+                        {
                             Console.WriteLine($"File {fileId} not found.");
                             return null;
                         }
@@ -49,7 +56,8 @@ namespace RelayUploadProtocol {
             }
         }
 
-        public static async Task PutTemporaryFile(string sessionId, string authenticationToken, string fileId, string filePath, int destructionTime) {
+        public static async Task PutTemporaryFile(string sessionId, string authenticationToken, string fileId, string filePath, int destructionTime)
+        {
             string serverUrl = "http://" + ipAddress + ":5105";
             int requestType = (int)RequestType.AddTemporaryFile;
 
@@ -57,7 +65,8 @@ namespace RelayUploadProtocol {
             destructionTime = Math.Clamp(destructionTime, 0, 60000);
 
             using (var ms = new MemoryStream())
-            using (var writer = new BinaryWriter(ms, Encoding.UTF8, leaveOpen: true)) {
+            using (var writer = new BinaryWriter(ms, Encoding.UTF8, leaveOpen: true))
+            {
                 // Write protocol header
                 writer.Write(sessionId);
                 writer.Write(authenticationToken);
@@ -76,7 +85,8 @@ namespace RelayUploadProtocol {
                 ms.Position = 0;
 
                 // Send raw stream
-                using (var client = new HttpClient()) {
+                using (var client = new HttpClient())
+                {
                     var content = new StreamContent(ms);
                     content.Headers.Add("Content-Type", "application/octet-stream");
 
@@ -90,12 +100,14 @@ namespace RelayUploadProtocol {
         }
 
 
-        public static async Task<string> GetPersistedFile(string sessionId, string authenticationToken, string fileId, string outputFolder) {
+        public static async Task<string> GetPersistedFile(string sessionId, string authenticationToken, string fileId, string outputFolder)
+        {
             string serverUrl = "http://" + ipAddress + ":5105";
             int requestType = (int)RequestType.GetPersistedFile;
 
             using (var ms = new MemoryStream())
-            using (var writer = new BinaryWriter(ms, Encoding.UTF8, leaveOpen: true)) {
+            using (var writer = new BinaryWriter(ms, Encoding.UTF8, leaveOpen: true))
+            {
                 // Write protocol header (no file data in this case)
                 writer.Write(sessionId);
                 writer.Write(authenticationToken);
@@ -104,7 +116,8 @@ namespace RelayUploadProtocol {
                 writer.Flush();
                 ms.Position = 0;
 
-                using (var client = new HttpClient()) {
+                using (var client = new HttpClient())
+                {
                     var content = new StreamContent(ms);
                     content.Headers.Add("Content-Type", "application/octet-stream");
 
@@ -114,7 +127,8 @@ namespace RelayUploadProtocol {
                     // Save the response stream as a file
                     string outputPath = Path.Combine(outputFolder, fileId + ".hex");
                     using (var responseStream = await response.Content.ReadAsStreamAsync())
-                    using (var fileStream = new FileStream(outputPath, FileMode.Create, FileAccess.Write)) {
+                    using (var fileStream = new FileStream(outputPath, FileMode.Create, FileAccess.Write))
+                    {
                         await responseStream.CopyToAsync(fileStream);
                     }
 
@@ -125,12 +139,14 @@ namespace RelayUploadProtocol {
         }
 
 
-        public static async Task PutPersistedFile(string sessionId, string authenticationToken, string fileId, string filePath) {
+        public static async Task PutPersistedFile(string sessionId, string authenticationToken, string fileId, string filePath)
+        {
             string serverUrl = "http://" + ipAddress + ":5105";
             int requestType = (int)RequestType.AddPersistedFile;
 
             using (var ms = new MemoryStream())
-            using (var writer = new BinaryWriter(ms, Encoding.UTF8, leaveOpen: true)) {
+            using (var writer = new BinaryWriter(ms, Encoding.UTF8, leaveOpen: true))
+            {
                 // Write protocol header
                 writer.Write(sessionId);
                 writer.Write(authenticationToken);
@@ -146,7 +162,8 @@ namespace RelayUploadProtocol {
                 ms.Position = 0;
 
                 // Send raw stream
-                using (var client = new HttpClient()) {
+                using (var client = new HttpClient())
+                {
                     var content = new StreamContent(ms);
                     content.Headers.Add("Content-Type", "application/octet-stream");
 
@@ -155,6 +172,93 @@ namespace RelayUploadProtocol {
                     Console.WriteLine($"Response: {response.StatusCode}");
                     string respBody = await response.Content.ReadAsStringAsync();
                     Console.WriteLine(respBody);
+                }
+            }
+        }
+        public static async Task<string> GetServerAlias(string sessionId)
+        {
+            int requestType = (int)RequestType.GetServerAlias;
+            return await GetServerInfo(sessionId, requestType);
+        }
+        public static async Task<string> GetServerRules(string sessionId)
+        {
+            int requestType = (int)RequestType.GetServerRules;
+            return await GetServerInfo(sessionId, requestType);
+        }
+        public static async Task<string> GetServerDescription(string sessionId)
+        {
+            int requestType = (int)RequestType.GetServerDescription;
+            return await GetServerInfo(sessionId, requestType);
+        }
+
+        public static async Task<bool> SetServerAlias(string sessionId, string authenticationToken)
+        {
+            int requestType = (int)RequestType.SetServerAlias;
+            return await SetServerInfo(sessionId, authenticationToken, requestType);
+        }
+        public static async Task<bool> SetServerRules(string sessionId, string authenticationToken)
+        {
+            int requestType = (int)RequestType.SetServerRules;
+            return await SetServerInfo(sessionId, authenticationToken, requestType);
+        }
+        public static async Task<bool> SetServerDescription(string sessionId, string authenticationToken)
+        {
+            int requestType = (int)RequestType.SetServerDescription;
+            return await SetServerInfo(sessionId, authenticationToken, requestType);
+        }
+
+
+        private static async Task<string> GetServerInfo(string sessionId, int requestType)
+        {
+            string serverUrl = "http://" + ipAddress + ":5105";
+            using (var ms = new MemoryStream())
+            using (var writer = new BinaryWriter(ms, Encoding.UTF8, leaveOpen: true))
+            {
+                // Write protocol header
+                writer.Write(sessionId);
+                writer.Write("");
+                writer.Write(requestType);
+
+                writer.Flush();
+                ms.Position = 0;
+
+                // Send raw stream
+                using (var client = new HttpClient())
+                {
+                    var content = new StreamContent(ms);
+                    content.Headers.Add("Content-Type", "application/octet-stream");
+
+                    HttpResponseMessage response = await client.PostAsync(serverUrl, content);
+
+                    Console.WriteLine($"Response: {response.StatusCode}");
+                    return await response.Content.ReadAsStringAsync();
+                }
+            }
+        }
+        private static async Task<bool> SetServerInfo(string sessionId, string authenticationToken, int requestType)
+        {
+            string serverUrl = "http://" + ipAddress + ":5105";
+            using (var ms = new MemoryStream())
+            using (var writer = new BinaryWriter(ms, Encoding.UTF8, leaveOpen: true))
+            {
+                // Write protocol header
+                writer.Write(sessionId);
+                writer.Write(authenticationToken);
+                writer.Write(requestType);
+
+                writer.Flush();
+                ms.Position = 0;
+
+                // Send raw stream
+                using (var client = new HttpClient())
+                {
+                    var content = new StreamContent(ms);
+                    content.Headers.Add("Content-Type", "application/octet-stream");
+
+                    HttpResponseMessage response = await client.PostAsync(serverUrl, content);
+
+                    Console.WriteLine($"Response: {response.StatusCode}");
+                    return (await response.Content.ReadAsStringAsync()) == "success";
                 }
             }
         }

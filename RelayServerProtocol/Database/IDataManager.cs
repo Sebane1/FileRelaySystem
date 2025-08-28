@@ -16,6 +16,8 @@ namespace RelayServerProtocol.Database
         public int GetSynchronizationContext();
         public void SetHashedAccessKey(string sessionId, string keyHash);
         public void CheckOrCreateSessionUser(string sessionId);
+        public string GetServerAlias();
+        public void SetServerAlias(string alias);
         public string GetServerRules();
         public void SetServerRules(string rules);
         public string GetServerDescription();
@@ -23,8 +25,8 @@ namespace RelayServerProtocol.Database
         public void BanUser(string sessionId);
         public AgeGroup GetAgeGroup();
         public void SetAgeGroup(Structs.AgeGroup group);
-        public ServerContentRating GetServerContent();
-        public void SetServerContent(Structs.ServerContentRating rating);
+        public ServerContentRating GetServerContentRating();
+        public void SetServerContentRating(Structs.ServerContentRating rating);
         public ServerContentType GetServerContentType();
         public void SetServerContentType(Structs.ServerContentType type);
     }

@@ -60,7 +60,7 @@ namespace RelayServerProtocol.Database
             return null;
         }
 
-        public Structs.ServerContentRating GetServerContent()
+        public Structs.ServerContentRating GetServerContentRating()
         {
             return _serverData.ServerContentRating;
         }
@@ -166,7 +166,7 @@ namespace RelayServerProtocol.Database
             PersistData();
         }
 
-        public void SetServerContent(Structs.ServerContentRating rating)
+        public void SetServerContentRating(Structs.ServerContentRating rating)
         {
             _serverData.ServerContentRating = rating;
             PersistData();

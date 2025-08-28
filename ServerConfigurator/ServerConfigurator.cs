@@ -3,16 +3,20 @@ using RelayUploadProtocol;
 using static RelayUploadProtocol.Structs;
 
 namespace ServerConfigurator {
-    public partial class ServerConfigurator : Form {
-        public ServerConfigurator() {
+    public partial class ServerConfigurator : Form
+    {
+        public ServerConfigurator()
+        {
             InitializeComponent();
         }
 
-        private void serverRules_TextChanged(object sender, EventArgs e) {
+        private void serverRules_TextChanged(object sender, EventArgs e)
+        {
 
         }
 
-        private void ServerConfigurator_Load(object sender, EventArgs e) {
+        private void ServerConfigurator_Load(object sender, EventArgs e)
+        {
             var ageGroups = Enum.GetNames<AgeGroup>();
             var contentRatings = Enum.GetNames<ServerContentRating>();
             var serverContent = Enum.GetNames<ServerContentType>();
@@ -21,8 +25,14 @@ namespace ServerConfigurator {
             serverContentTypeComboBox.Items.AddRange(serverContent);
         }
 
-        private void testServerButton_Click(object sender, EventArgs e) {
-            ClientManager.PutPersistedFile("Poopfart", "artemis", "cake", @"C:\Users\stel9\Pictures\AMF.png");
+        private void testServerButton_Click(object sender, EventArgs e)
+        {
+            ClientManager.PutPersistedFile("root", "artemis", "cake", @"C:\Users\stel9\Pictures\AMF.png");
+        }
+
+        private void saveSettingsButton_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

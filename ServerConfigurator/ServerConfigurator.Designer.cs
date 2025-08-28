@@ -1,4 +1,4 @@
-﻿namespace ServerConfigurator {
+namespace ServerConfigurator {
     partial class ServerConfigurator {
         /// <summary>
         ///  Required designer variable.
@@ -22,7 +22,8 @@
         ///  Required method for Designer support - do not modify
         ///  the contents of this method with the code editor.
         /// </summary>
-        private void InitializeComponent() {
+        private void InitializeComponent()
+        {
             serverRules = new TextBox();
             ageGroupComboBox = new ComboBox();
             serverContentComboBox = new ComboBox();
@@ -36,11 +37,13 @@
             runServerButton = new Button();
             saveSettingsButton = new Button();
             testServerButton = new Button();
+            serverNameTextBox = new TextBox();
+            label5 = new Label();
             SuspendLayout();
             // 
             // serverRules
             // 
-            serverRules.Location = new Point(12, 86);
+            serverRules.Location = new Point(12, 126);
             serverRules.Multiline = true;
             serverRules.Name = "serverRules";
             serverRules.Size = new Size(375, 129);
@@ -50,7 +53,7 @@
             // ageGroupComboBox
             // 
             ageGroupComboBox.FormattingEnabled = true;
-            ageGroupComboBox.Location = new Point(12, 25);
+            ageGroupComboBox.Location = new Point(12, 65);
             ageGroupComboBox.Name = "ageGroupComboBox";
             ageGroupComboBox.Size = new Size(121, 23);
             ageGroupComboBox.TabIndex = 2;
@@ -58,7 +61,7 @@
             // serverContentComboBox
             // 
             serverContentComboBox.FormattingEnabled = true;
-            serverContentComboBox.Location = new Point(139, 25);
+            serverContentComboBox.Location = new Point(139, 65);
             serverContentComboBox.Name = "serverContentComboBox";
             serverContentComboBox.Size = new Size(121, 23);
             serverContentComboBox.TabIndex = 3;
@@ -66,7 +69,7 @@
             // serverContentTypeComboBox
             // 
             serverContentTypeComboBox.FormattingEnabled = true;
-            serverContentTypeComboBox.Location = new Point(266, 25);
+            serverContentTypeComboBox.Location = new Point(266, 65);
             serverContentTypeComboBox.Name = "serverContentTypeComboBox";
             serverContentTypeComboBox.Size = new Size(121, 23);
             serverContentTypeComboBox.TabIndex = 4;
@@ -74,7 +77,7 @@
             // ageGroupLabel
             // 
             ageGroupLabel.AutoSize = true;
-            ageGroupLabel.Location = new Point(12, 7);
+            ageGroupLabel.Location = new Point(12, 47);
             ageGroupLabel.Name = "ageGroupLabel";
             ageGroupLabel.Size = new Size(64, 15);
             ageGroupLabel.TabIndex = 5;
@@ -83,7 +86,7 @@
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(139, 7);
+            label1.Location = new Point(139, 47);
             label1.Name = "label1";
             label1.Size = new Size(87, 15);
             label1.TabIndex = 6;
@@ -92,7 +95,7 @@
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(267, 7);
+            label2.Location = new Point(267, 47);
             label2.Name = "label2";
             label2.Size = new Size(85, 15);
             label2.TabIndex = 7;
@@ -101,7 +104,7 @@
             // label3
             // 
             label3.AutoSize = true;
-            label3.Location = new Point(12, 68);
+            label3.Location = new Point(12, 108);
             label3.Name = "label3";
             label3.Size = new Size(70, 15);
             label3.TabIndex = 8;
@@ -110,7 +113,7 @@
             // label4
             // 
             label4.AutoSize = true;
-            label4.Location = new Point(12, 235);
+            label4.Location = new Point(12, 275);
             label4.Name = "label4";
             label4.Size = new Size(102, 15);
             label4.TabIndex = 10;
@@ -118,7 +121,7 @@
             // 
             // textBox1
             // 
-            textBox1.Location = new Point(12, 253);
+            textBox1.Location = new Point(12, 293);
             textBox1.Multiline = true;
             textBox1.Name = "textBox1";
             textBox1.Size = new Size(375, 129);
@@ -126,7 +129,7 @@
             // 
             // runServerButton
             // 
-            runServerButton.Location = new Point(128, 388);
+            runServerButton.Location = new Point(128, 428);
             runServerButton.Name = "runServerButton";
             runServerButton.Size = new Size(75, 23);
             runServerButton.TabIndex = 11;
@@ -135,16 +138,17 @@
             // 
             // saveSettingsButton
             // 
-            saveSettingsButton.Location = new Point(12, 388);
+            saveSettingsButton.Location = new Point(12, 428);
             saveSettingsButton.Name = "saveSettingsButton";
             saveSettingsButton.Size = new Size(110, 23);
             saveSettingsButton.TabIndex = 12;
             saveSettingsButton.Text = "Save Settings";
             saveSettingsButton.UseVisualStyleBackColor = true;
+            saveSettingsButton.Click += saveSettingsButton_Click;
             // 
             // testServerButton
             // 
-            testServerButton.Location = new Point(312, 388);
+            testServerButton.Location = new Point(312, 428);
             testServerButton.Name = "testServerButton";
             testServerButton.Size = new Size(75, 23);
             testServerButton.TabIndex = 13;
@@ -152,11 +156,29 @@
             testServerButton.UseVisualStyleBackColor = true;
             testServerButton.Click += testServerButton_Click;
             // 
+            // serverNameTextBox
+            // 
+            serverNameTextBox.Location = new Point(139, 12);
+            serverNameTextBox.Name = "serverNameTextBox";
+            serverNameTextBox.Size = new Size(248, 23);
+            serverNameTextBox.TabIndex = 14;
+            // 
+            // label5
+            // 
+            label5.AutoSize = true;
+            label5.Location = new Point(12, 15);
+            label5.Name = "label5";
+            label5.Size = new Size(74, 15);
+            label5.TabIndex = 15;
+            label5.Text = "Server Name";
+            // 
             // ServerConfigurator
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(403, 420);
+            ClientSize = new Size(403, 463);
+            Controls.Add(label5);
+            Controls.Add(serverNameTextBox);
             Controls.Add(testServerButton);
             Controls.Add(saveSettingsButton);
             Controls.Add(runServerButton);
@@ -193,5 +215,7 @@
         private Button runServerButton;
         private Button saveSettingsButton;
         private Button testServerButton;
+        private TextBox serverNameTextBox;
+        private Label label5;
     }
 }

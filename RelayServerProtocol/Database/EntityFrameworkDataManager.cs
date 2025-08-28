@@ -110,8 +110,8 @@ namespace RelayServerProtocol.Database
         public Structs.AgeGroup GetAgeGroup() => _database.ServerData.Find(1)?.AgeGroup ?? default;
         public void SetAgeGroup(Structs.AgeGroup group) { _database.ServerData.Find(1).AgeGroup = group; _database.SaveChanges(); }
 
-        public Structs.ServerContentRating GetServerContent() => _database.ServerData.Find(1)?.ServerContentRating ?? default;
-        public void SetServerContent(Structs.ServerContentRating rating) { _database.ServerData.Find(1).ServerContentRating = rating; _database.SaveChanges(); }
+        public Structs.ServerContentRating GetServerContentRating() => _database.ServerData.Find(1)?.ServerContentRating ?? default;
+        public void SetServerContentRating(Structs.ServerContentRating rating) { _database.ServerData.Find(1).ServerContentRating = rating; _database.SaveChanges(); }
 
         public Structs.ServerContentType GetServerContentType() => _database.ServerData.Find(1)?.ServerContentType ?? default;
         public void SetServerContentType(Structs.ServerContentType type) { _database.ServerData.Find(1).ServerContentType = type; _database.SaveChanges(); }
@@ -124,5 +124,9 @@ namespace RelayServerProtocol.Database
 
         public int GetSynchronizationContext() => _database.ServerData.Find(1)?.SynchronizationContext ?? 0;
         public void SetSynchronizationContext(int ctx) { _database.ServerData.Find(1).SynchronizationContext = ctx; _database.SaveChanges(); }
+
+        public string GetServerAlias() => _database.ServerData.Find(1)?.ServerAlias;
+
+        public void SetServerAlias(string alias) { _database.ServerData.Find(1).ServerAlias = alias; _database.SaveChanges(); }
     }
 }
