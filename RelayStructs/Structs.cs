@@ -59,6 +59,8 @@ namespace RelayUploadProtocol
             SetSynchronizationContext = 25,
             GetMaxFileSizeInMb = 26,
             SetMaxFileSizeInMb = 27,
+            GetGeneralUserLifespan = 28,
+            SetGeneralUserLifespan = 29,
             GetPublicServerInfo = 28,
         }
     }

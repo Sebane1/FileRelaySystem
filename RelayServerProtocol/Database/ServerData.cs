@@ -22,6 +22,7 @@ namespace RelayServerProtocol.Database
         ServerContentType _serverContentType;
         int _maxFileSizeInMb = 500;
         int _maxUsers = 20;
+        int _generalUserLifeSpanInMilliseconds = -1;
 
 
         [Key]
@@ -40,5 +41,6 @@ namespace RelayServerProtocol.Database
         public string ServerAlias { get => _serverAlias; set => _serverAlias = value; }
         public int MaxFileSizeInMb { get => _maxFileSizeInMb; set => _maxFileSizeInMb = value; }
         public int MaxUsers { get => _maxUsers; set => _maxUsers = value; }
+        public int GeneralUserLifeSpanInMilliseconds { get => _generalUserLifeSpanInMilliseconds; set => _generalUserLifeSpanInMilliseconds = value; }
     }
 }
