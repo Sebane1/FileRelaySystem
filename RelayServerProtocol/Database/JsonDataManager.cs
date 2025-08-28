@@ -80,7 +80,7 @@ namespace RelayServerProtocol.Database
             return _serverData.ServerRules;
         }
 
-        public int GetSynchronizationContext()
+        public string GetSynchronizationContext()
         {
             return _serverData.SynchronizationContext;
         }

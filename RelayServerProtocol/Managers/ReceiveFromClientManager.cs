@@ -1,4 +1,5 @@
 using FileSystemRelay;
+using RelayServerProtocol.Database;
 using RelayServerProtocol.TemporaryData;
 using System.Diagnostics;
 using System.Net;
@@ -30,104 +31,11 @@ namespace RelayServerProtocol.Managers
                         var authenticationData = ServerAccessManager.Instance.Authenticate(sessionId, authenticationToken);
                         if (authenticationData.Key)
                         {
-                            switch ((RequestType)requestType)
-                            {
-                                case RequestType.AddTemporaryFile:
-                                    var targetValue = reader.ReadString();
-                                    AddTemporaryFile(sessionId, targetValue, reader, writer);
-                                    Console.WriteLine(sessionId + " received " + targetValue);
-                                    break;
-                                case RequestType.GetTemporaryFile:
-                                case RequestType.ClearState:
-                                    targetValue = reader.ReadString();
-                                    GetTemporaryFile(targetValue, writer, requestType);
-                                    break;
-                                case RequestType.AddPersistedFile:
-                                    targetValue = reader.ReadString();
-                                    ServerAccessManager.Instance.AddPersistedFile(sessionId, targetValue, reader, writer);
-                                    break;
-                                case RequestType.GetPersistedFile:
-                                    targetValue = reader.ReadString();
-                                    GetPersistedFile(targetValue, writer);
-                                    break;
-                                case RequestType.CheckIfPersistedFileChanged:
-                                    targetValue = reader.ReadString();
-                                    writer.Write(ServerAccessManager.Instance.CheckIfPersistedFileChanged(sessionId, targetValue, reader, writer));
-                                    break;
-                                case RequestType.CheckIfFileExists:
-                                    targetValue = reader.ReadString();
-                                    writer.Write(ServerAccessManager.Instance.CheckIfFileExists(sessionId, targetValue, reader, writer));
-                                    break;
-                                case RequestType.BanUser:
-                                    targetValue = reader.ReadString();
-                                    if (ServerAccessManager.Instance.BanSessionId(sessionId, targetValue))
-                                    {
-                                        Console.WriteLine(sessionId + " banned " + targetValue);
-                                    }
-                                    else
-                                    {
-                                        Console.WriteLine(sessionId + " has insufficient permissions to ban " + targetValue);
-                                        writer.Write("Ban succeeded");
-                                    }
-                                    break;
-                                case RequestType.IssueAccessToken:
-                                    if (authenticationData.Value > 0)
-                                    {
-                                        writer.Write(ServerAccessManager.Instance.GenerateUnclaimedAccessToken());
-                                    }
-                                    break;
-                                case RequestType.SetServerAlias:
-                                    ServerAccessManager.Instance.SetServerAlias(reader.ReadString());
-                                    break;
-                                case RequestType.SetServerRules:
-                                    ServerAccessManager.Instance.SetServerRules(reader.ReadString());
-                                    break;
-                                case RequestType.SetServerDescription:
-                                    ServerAccessManager.Instance.SetServerDescription(reader.ReadString());
-                                    break;
-                                case RequestType.SetContentRating:
-                                    ServerAccessManager.Instance.SetContentRating(reader.ReadInt32());
-                                    break;
-                                case RequestType.SetServerContentType:
-                                    ServerAccessManager.Instance.SetServerContentType(reader.ReadInt32());
-                                    break;
-                                case RequestType.SetAgeGroup:
-                                    ServerAccessManager.Instance.SetAgeGroup(reader.ReadInt32());
-                                    break;
-
-                            }
+                            HandleRequestsRequiringAuthentication(sessionId, requestType, authenticationData, reader, writer);
                         }
                         else
                         {
-                            // This data doesn't require authentication to access.
-                            // This allows the client use to view what the server is all about before joining.
-                            switch ((RequestType)requestType)
-                            {
-                                case RequestType.GetServerAlias:
-                                    writer.Write(ServerAccessManager.Instance.GetServerAlias());
-                                    break;
-                                case RequestType.GetServerRules:
-                                    writer.Write(ServerAccessManager.Instance.GetServerRules());
-                                    break;
-                                case RequestType.GetServerDescription:
-                                    writer.Write(ServerAccessManager.Instance.GetServerDescription());
-                                    break;
-                                case RequestType.GetAgeGroup:
-                                    writer.Write(ServerAccessManager.Instance.GetAgeGroup());
-                                    break;
-                                case RequestType.GetContentRating:
-                                    writer.Write(ServerAccessManager.Instance.GetContentRating());
-                                    break;
-                                case RequestType.GetServerContent:
-                                    writer.Write(ServerAccessManager.Instance.GetServerContentType());
-                                    break;
-                                case RequestType.GetPublicServerInfo:
-                                    writer.Write(ServerAccessManager.Instance.GetPublicServerInfo());
-                                    break;
-                                default:
-                                    client.Response.StatusCode = 401;
-                                    break;
-                            }
+                            HandleRequestsNotRequiringAuthentication(sessionId, requestType, authenticationData, reader, writer);
                         }
                     }
                     catch (Exception e)
@@ -140,6 +48,108 @@ namespace RelayServerProtocol.Managers
             }
         }
 
+        private void HandleRequestsNotRequiringAuthentication(string sessionId, int requestType, KeyValuePair<bool, ServerRole> authenticationData, BinaryReader reader, BinaryWriter writer)
+        {
+            // This data doesn't require authentication to access.
+            // This allows the client use to view what the server is all about before joining.
+            switch ((RequestType)requestType)
+            {
+                case RequestType.GetServerAlias:
+                    writer.Write(ServerAccessManager.Instance.GetServerAlias());
+                    break;
+                case RequestType.GetServerRules:
+                    writer.Write(ServerAccessManager.Instance.GetServerRules());
+                    break;
+                case RequestType.GetServerDescription:
+                    writer.Write(ServerAccessManager.Instance.GetServerDescription());
+                    break;
+                case RequestType.GetAgeGroup:
+                    writer.Write(ServerAccessManager.Instance.GetAgeGroup());
+                    break;
+                case RequestType.GetContentRating:
+                    writer.Write(ServerAccessManager.Instance.GetContentRating());
+                    break;
+                case RequestType.GetServerContent:
+                    writer.Write(ServerAccessManager.Instance.GetServerContentType());
+                    break;
+                case RequestType.GetPublicServerInfo:
+                    writer.Write(ServerAccessManager.Instance.GetPublicServerInfo());
+                    break;
+                default:
+                    client.Response.StatusCode = 401;
+                    break;
+            }
+        }
+
+        private void HandleRequestsRequiringAuthentication(string sessionId, int requestType, KeyValuePair<bool, ServerRole> authenticationData, BinaryReader reader, BinaryWriter writer)
+        {
+            switch ((RequestType)requestType)
+            {
+                case RequestType.AddTemporaryFile:
+                    var targetValue = reader.ReadString();
+                    AddTemporaryFile(sessionId, targetValue, reader, writer);
+                    Console.WriteLine(sessionId + " received " + targetValue);
+                    break;
+                case RequestType.GetTemporaryFile:
+                case RequestType.ClearState:
+                    targetValue = reader.ReadString();
+                    GetTemporaryFile(targetValue, writer, requestType);
+                    break;
+                case RequestType.AddPersistedFile:
+                    targetValue = reader.ReadString();
+                    ServerAccessManager.Instance.AddPersistedFile(sessionId, targetValue, reader, writer);
+                    break;
+                case RequestType.GetPersistedFile:
+                    targetValue = reader.ReadString();
+                    GetPersistedFile(targetValue, writer);
+                    break;
+                case RequestType.CheckIfPersistedFileChanged:
+                    targetValue = reader.ReadString();
+                    writer.Write(ServerAccessManager.Instance.CheckIfPersistedFileChanged(sessionId, targetValue, reader, writer));
+                    break;
+                case RequestType.CheckIfFileExists:
+                    targetValue = reader.ReadString();
+                    writer.Write(ServerAccessManager.Instance.CheckIfFileExists(sessionId, targetValue, reader, writer));
+                    break;
+                case RequestType.BanUser:
+                    targetValue = reader.ReadString();
+                    if (ServerAccessManager.Instance.BanSessionId(sessionId, targetValue))
+                    {
+                        Console.WriteLine(sessionId + " banned " + targetValue);
+                    }
+                    else
+                    {
+                        Console.WriteLine(sessionId + " has insufficient permissions to ban " + targetValue);
+                        writer.Write("Ban succeeded");
+                    }
+                    break;
+                case RequestType.IssueAccessToken:
+                    if (authenticationData.Value > 0)
+                    {
+                        writer.Write(ServerAccessManager.Instance.GenerateUnclaimedAccessToken());
+                    }
+                    break;
+                case RequestType.SetServerAlias:
+                    ServerAccessManager.Instance.SetServerAlias(reader.ReadString());
+                    break;
+                case RequestType.SetServerRules:
+                    ServerAccessManager.Instance.SetServerRules(reader.ReadString());
+                    break;
+                case RequestType.SetServerDescription:
+                    ServerAccessManager.Instance.SetServerDescription(reader.ReadString());
+                    break;
+                case RequestType.SetContentRating:
+                    ServerAccessManager.Instance.SetContentRating(reader.ReadInt32());
+                    break;
+                case RequestType.SetServerContentType:
+                    ServerAccessManager.Instance.SetServerContentType(reader.ReadInt32());
+                    break;
+                case RequestType.SetAgeGroup:
+                    ServerAccessManager.Instance.SetAgeGroup(reader.ReadInt32());
+                    break;
+
+            }
+        }
 
         private void AddTemporaryFile(string sessionId, string targetValue, BinaryReader reader, BinaryWriter writer)
         {
