@@ -122,8 +122,8 @@ namespace RelayServerProtocol.Database
         public string GetServerRules() => _database.ServerData.Find(1)?.ServerRules;
         public void SetServerRules(string rules) { _database.ServerData.Find(1).ServerRules = rules; _database.SaveChanges(); }
 
-        public int GetSynchronizationContext() => _database.ServerData.Find(1)?.SynchronizationContext ?? 0;
-        public void SetSynchronizationContext(int ctx) { _database.ServerData.Find(1).SynchronizationContext = ctx; _database.SaveChanges(); }
+        public string GetSynchronizationContext() => _database.ServerData.Find(1)?.SynchronizationContext;
+        public void SetSynchronizationContext(string ctx) { _database.ServerData.Find(1).SynchronizationContext = ctx; _database.SaveChanges(); }
 
         public string GetServerAlias() => _database.ServerData.Find(1)?.ServerAlias;
 

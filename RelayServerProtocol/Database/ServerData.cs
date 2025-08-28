@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Concurrent;
 using System.ComponentModel.DataAnnotations;
 using static RelayUploadProtocol.Structs;
@@ -18,7 +17,7 @@ namespace RelayServerProtocol.Database
         string _synchronizationContext = "";
 
         AgeGroup _ageGroup;
-        ServerContentRating _serverContent;
+        ServerContentRating _serverContentRating;
         ServerContentType _serverContentType;
         int _maxFileSizeInMb = 500;
         int _maxUsers = 20;
@@ -36,7 +35,7 @@ namespace RelayServerProtocol.Database
         public string ServerRules { get => _serverRules; set => _serverRules = value; }
         public string ServerDescription { get => _serverDescription; set => _serverDescription = value; }
         public AgeGroup AgeGroup { get => _ageGroup; set => _ageGroup = value; }
-        public ServerContentRating ServerContentRating { get => _serverContent; set => _serverContent = value; }
+        public ServerContentRating ServerContentRating { get => _serverContentRating; set => _serverContentRating = value; }
         public ServerContentType ServerContentType { get => _serverContentType; set => _serverContentType = value; }
         public string ServerAlias { get => _serverAlias; set => _serverAlias = value; }
         public int MaxFileSizeInMb { get => _maxFileSizeInMb; set => _maxFileSizeInMb = value; }

@@ -13,7 +13,8 @@ namespace RelayServerProtocol.Database
         public bool IsValidUnclaimedAuthenticationKeyHash(string keyHash);
         public void RemoveUnclaimedAuthenticationKeyHash(string keyHash);
         public string CreateNewUnclaimedAccessToken();
-        public int GetSynchronizationContext();
+        public string GetSynchronizationContext();
+        public void SetSynchronizationContext(string synchronizationContext);
         public void SetHashedAccessKey(string sessionId, string keyHash);
         public void CheckOrCreateSessionUser(string sessionId);
         public string GetServerAlias();

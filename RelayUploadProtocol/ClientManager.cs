@@ -100,7 +100,6 @@ namespace RelayUploadProtocol
             }
         }
 
-
         public static async Task<string> GetPersistedFile(string sessionId, string authenticationToken, string fileId, string outputFolder)
         {
             string serverUrl = "http://" + ipAddress + ":5105";
