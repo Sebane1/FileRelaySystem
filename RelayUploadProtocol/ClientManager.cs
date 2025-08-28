@@ -20,8 +20,9 @@ namespace RelayUploadProtocol
                 // Write request header
                 writer.Write(sessionId);
                 writer.Write(authenticationToken);
-                writer.Write(fileId);
                 writer.Write(requestType);
+                writer.Write(fileId);
+
                 writer.Flush();
                 ms.Position = 0;
 
@@ -70,8 +71,8 @@ namespace RelayUploadProtocol
                 // Write protocol header
                 writer.Write(sessionId);
                 writer.Write(authenticationToken);
-                writer.Write(fileId);
                 writer.Write(requestType);
+                writer.Write(fileId);
 
                 // Write file
                 byte[] fileBytes = File.ReadAllBytes(filePath);
@@ -111,8 +112,8 @@ namespace RelayUploadProtocol
                 // Write protocol header (no file data in this case)
                 writer.Write(sessionId);
                 writer.Write(authenticationToken);
-                writer.Write(fileId); // targetValue = file hash/ID
                 writer.Write(requestType);
+                writer.Write(fileId); // targetValue = file hash/ID
                 writer.Flush();
                 ms.Position = 0;
 
@@ -150,8 +151,8 @@ namespace RelayUploadProtocol
                 // Write protocol header
                 writer.Write(sessionId);
                 writer.Write(authenticationToken);
-                writer.Write(fileId);
                 writer.Write(requestType);
+                writer.Write(fileId);
 
                 // Write file data
                 byte[] fileBytes = File.ReadAllBytes(filePath);
