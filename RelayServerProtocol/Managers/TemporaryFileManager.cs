@@ -1,6 +1,5 @@
 using RelayServerProtocol.TemporaryData;
 using System.Collections.Concurrent;
-using static RelayServerProtocol.TemporaryData.FileIdentifier;
 
 namespace RelayServerProtocol.Managers {
     public class TemporaryFileManager {

@@ -1,5 +1,4 @@
 using RelayCommonData;
-using RelayUploadProtocol;
 using static RelayServerProtocol.Database.ServerDatabaseContext;
 using static RelayUploadProtocol.Enums;
 
@@ -19,12 +18,11 @@ namespace RelayServerProtocol.Database
         }
 
         // ------------------ Master password ------------------
-        public bool CheckIfPasswordExists() =>
-            !string.IsNullOrEmpty(_database.ServerData.Find(1)?.MasterKeyHash);
+        public bool CheckIfPasswordExists() => !string.IsNullOrEmpty(_database.ServerData.Find(1)?.MasterKeyHash);
 
         public bool SetMasterPassword(string password)
         {
-            if (string.IsNullOrEmpty(password)) return false;
+            if (string.IsNullOrEmpty(password)) { return false; }
 
             var salt = Guid.NewGuid().ToString();
             var hash = Hashing.SHA512Hash(password + salt);
@@ -50,8 +48,7 @@ namespace RelayServerProtocol.Database
             return code;
         }
 
-        public bool IsValidUnclaimedAuthenticationKeyHash(string keyHash) =>
-            _database.UnclaimedKeys.Any(k => k.KeyHash == keyHash);
+        public bool IsValidUnclaimedAuthenticationKeyHash(string keyHash) => _database.UnclaimedKeys.Any(k => k.KeyHash == keyHash);
 
         public void RemoveUnclaimedAuthenticationKeyHash(string authenticationHash)
         {
@@ -64,8 +61,7 @@ namespace RelayServerProtocol.Database
         }
 
         // ------------------ Sessions ------------------
-        public PersistedSessionData GetPersistedData(string sessionId) =>
-            _database.Sessions.Find(sessionId);
+        public PersistedSessionData GetPersistedData(string sessionId) => _database.Sessions.Find(sessionId);
 
         public void SetHashedAccessKey(string sessionId, string authenticationHash)
         {
@@ -127,34 +123,16 @@ namespace RelayServerProtocol.Database
 
         public void SetServerAlias(string alias) { _database.ServerData.Find(1).ServerAlias = alias; _database.SaveChanges(); }
 
-        public int GetMaxFileSizeInMb()
-        {
-            return _database.ServerData.Find(1).MaxFileSizeInMb;
-        }
+        public int GetMaxFileSizeInMb() => _database.ServerData.Find(1).MaxFileSizeInMb;
 
-        public void SetGeneralUserLifespan(int lifespan)
-        {
-            _database.ServerData.Find(1).GeneralUserLifeSpanInMilliseconds = lifespan;
-        }
+        public void SetGeneralUserLifespan(int lifespan) { _database.ServerData.Find(1).GeneralUserLifeSpanInMilliseconds = lifespan; _database.SaveChanges(); }
 
-        public int GetGeneralUserLifespanInMilliseconds()
-        {
-            return _database.ServerData.Find(1).GeneralUserLifeSpanInMilliseconds;
-        }
+        public int GetGeneralUserLifespanInMilliseconds() => _database.ServerData.Find(1).GeneralUserLifeSpanInMilliseconds;
 
-        public ServerUploadAllowance GetUploadAllowance()
-        {
-            return _database.ServerData.Find(1).ServerUploadAllowance;
-        }
+        public ServerUploadAllowance GetUploadAllowance() => _database.ServerData.Find(1).ServerUploadAllowance;
 
-        public void SetUploadAllowance(ServerUploadAllowance uploadAllowance)
-        {
-            _database.ServerData.Find(1).ServerUploadAllowance = uploadAllowance;
-        }
+        public void SetUploadAllowance(ServerUploadAllowance uploadAllowance) { _database.ServerData.Find(1).ServerUploadAllowance = uploadAllowance; _database.SaveChanges(); }
 
-        public void SetMaxFileSizeInMb(int setMaxFileSizeInMb)
-        {
-            _database.ServerData.Find(1).MaxFileSizeInMb = setMaxFileSizeInMb;
-        }
+        public void SetMaxFileSizeInMb(int setMaxFileSizeInMb) { _database.ServerData.Find(1).MaxFileSizeInMb = setMaxFileSizeInMb; _database.SaveChanges(); }
     }
 }
