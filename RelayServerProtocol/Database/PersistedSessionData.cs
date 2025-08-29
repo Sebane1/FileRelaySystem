@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using static RelayUploadProtocol.Enums;
 
 namespace RelayServerProtocol.Database {
     public class PersistedSessionData {
@@ -25,11 +26,5 @@ namespace RelayServerProtocol.Database {
         /// Defines what server actions the session user can access
         /// </summary>
         public ServerRole ServerRole { get => _serverRole; set => _serverRole = value; }
-    }
-    public enum ServerRole {
-        None,
-        Moderator,
-        Admin,
-        Creator
     }
 }

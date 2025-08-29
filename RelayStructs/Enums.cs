@@ -30,6 +30,13 @@ namespace RelayUploadProtocol
             OneFilePerUser,
             MultipleFilesPerUser
         }
+        public enum ServerRole
+        {
+            None,
+            Moderator,
+            Admin,
+            Creator
+        }
         public enum RequestType
         {
             AddTemporaryFile = 0,
