@@ -190,6 +190,7 @@ namespace RelayServerProtocol.Database
         public void SetSynchronizationContext(string synchronizationContext)
         {
             _serverData.SynchronizationContext = synchronizationContext;
+            PersistData();
         }
 
         public string GetServerAlias()
@@ -200,6 +201,7 @@ namespace RelayServerProtocol.Database
         public void SetServerAlias(string alias)
         {
             _serverData.ServerAlias = alias;
+            PersistData();
         }
 
         public int GetMaxFileSizeInMb()
@@ -210,6 +212,7 @@ namespace RelayServerProtocol.Database
         public void SetGeneralUserLifespan(int lifespan)
         {
             _serverData.GeneralUserLifeSpanInMilliseconds = lifespan;
+            PersistData();
         }
 
         public int GetGeneralUserLifespanInMilliseconds()
@@ -225,11 +228,13 @@ namespace RelayServerProtocol.Database
         public void SetUploadAllowance(ServerUploadAllowance uploadAllowance)
         {
             _serverData.ServerUploadAllowance = uploadAllowance;
+            PersistData();
         }
 
         public void SetMaxFileSizeInMb(int setMaxFileSizeInMb)
         {
             _serverData.MaxFileSizeInMb = setMaxFileSizeInMb;
+            PersistData();
         }
 
         ServerUploadAllowance IDataManager.GetUploadAllowance()
