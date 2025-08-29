@@ -76,7 +76,7 @@ namespace RelayServerProtocol.Managers
                     writer.Write(ServerAccessManager.Instance.GetPublicServerInfo());
                     break;
                 case RequestType.GetUploadAllowance:
-                    writer.Write(ServerAccessManager.Instance.GetUploadAllowance());
+                    writer.Write((int)ServerAccessManager.Instance.GetUploadAllowance());
                     break;
                 case RequestType.GetSynchronizationContext:
                     writer.Write(ServerAccessManager.Instance.GetSynchronizationContext());
@@ -163,7 +163,7 @@ namespace RelayServerProtocol.Managers
                     ServerAccessManager.Instance.SetAgeGroup(reader.ReadInt32());
                     break;
                 case RequestType.SetUploadAllowance:
-                    ServerAccessManager.Instance.SetUploadAllowance(reader.ReadInt32());
+                    ServerAccessManager.Instance.SetUploadAllowance((ServerUploadAllowance)reader.ReadInt32());
                     break;
                 case RequestType.SetSynchronizationContext:
                     ServerAccessManager.Instance.SetSyncronizationContext(reader.ReadString());
