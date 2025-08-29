@@ -9,9 +9,6 @@ namespace RelayServerProtocol.Managers
 {
     public class ServerAccessManager : StreamUtilities
     {
-        private static ServerAccessManager _instance;
-
-        public static ServerAccessManager Instance { get => _instance; set => _instance = value; }
         public IDataManager DataManager { get => _dataManager; set => _dataManager = value; }
 
         IDataManager _dataManager;
@@ -19,7 +16,6 @@ namespace RelayServerProtocol.Managers
         public ServerAccessManager()
         {
             _dataManager = ConfigureData();
-            _instance = this;
         }
 
         DataConfig LoadDataConfig()

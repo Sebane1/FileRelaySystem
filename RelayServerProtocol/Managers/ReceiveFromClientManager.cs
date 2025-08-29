@@ -11,10 +11,13 @@ namespace RelayServerProtocol.Managers
     {
         private HttpListenerContext client;
         private TemporaryFileManager fileManager;
-        public ReceiveFromClientManager(HttpListenerContext client, TemporaryFileManager fileManager)
+        private ServerAccessManager serverAccessManager;
+
+        public ReceiveFromClientManager(HttpListenerContext client, TemporaryFileManager fileManager, ServerAccessManager serverAccessManager)
         {
             this.client = client;
             this.fileManager = fileManager;
+            this.serverAccessManager = serverAccessManager;
         }
 
         public void ReceiveFromClient()
@@ -28,7 +31,7 @@ namespace RelayServerProtocol.Managers
                         var sessionId = reader.ReadString();
                         var authenticationToken = reader.ReadString();
                         var requestType = reader.ReadInt32();
-                        var authenticationData = ServerAccessManager.Instance.Authenticate(sessionId, authenticationToken);
+                        var authenticationData = serverAccessManager.Authenticate(sessionId, authenticationToken);
                         if (authenticationData.Key)
                         {
                             HandleRequestsRequiringAuthentication(sessionId, requestType, authenticationData, reader, writer);
@@ -55,37 +58,37 @@ namespace RelayServerProtocol.Managers
             switch ((RequestType)requestType)
             {
                 case RequestType.GetServerAlias:
-                    writer.Write(ServerAccessManager.Instance.GetServerAlias());
+                    writer.Write(serverAccessManager.GetServerAlias());
                     break;
                 case RequestType.GetServerRules:
-                    writer.Write(ServerAccessManager.Instance.GetServerRules());
+                    writer.Write(serverAccessManager.GetServerRules());
                     break;
                 case RequestType.GetServerDescription:
-                    writer.Write(ServerAccessManager.Instance.GetServerDescription());
+                    writer.Write(serverAccessManager.GetServerDescription());
                     break;
                 case RequestType.GetAgeGroup:
-                    writer.Write(ServerAccessManager.Instance.GetAgeGroup());
+                    writer.Write(serverAccessManager.GetAgeGroup());
                     break;
                 case RequestType.GetContentRating:
-                    writer.Write(ServerAccessManager.Instance.GetContentRating());
+                    writer.Write(serverAccessManager.GetContentRating());
                     break;
                 case RequestType.GetServerContentType:
-                    writer.Write(ServerAccessManager.Instance.GetServerContentType());
+                    writer.Write(serverAccessManager.GetServerContentType());
                     break;
                 case RequestType.GetPublicServerInfo:
-                    writer.Write(ServerAccessManager.Instance.GetPublicServerInfo());
+                    writer.Write(serverAccessManager.GetPublicServerInfo());
                     break;
                 case RequestType.GetUploadAllowance:
-                    writer.Write((int)ServerAccessManager.Instance.GetUploadAllowance());
+                    writer.Write((int)serverAccessManager.GetUploadAllowance());
                     break;
                 case RequestType.GetSynchronizationContext:
-                    writer.Write(ServerAccessManager.Instance.GetSynchronizationContext());
+                    writer.Write(serverAccessManager.GetSynchronizationContext());
                     break;
                 case RequestType.GetMaxFileSizeInMb:
-                    writer.Write(ServerAccessManager.Instance.GetMaxFileSizeInMb());
+                    writer.Write(serverAccessManager.GetMaxFileSizeInMb());
                     break;
                 case RequestType.GetGeneralUserLifespan:
-                    writer.Write(ServerAccessManager.Instance.GetGeneralUserLifespan());
+                    writer.Write(serverAccessManager.GetGeneralUserLifespan());
                     break;
                 default:
                     client.Response.StatusCode = 401;
@@ -110,7 +113,7 @@ namespace RelayServerProtocol.Managers
                     break;
                 case RequestType.AddPersistedFile:
                     targetValue = reader.ReadString();
-                    ServerAccessManager.Instance.AddPersistedFile(sessionId, targetValue, reader, writer);
+                    serverAccessManager.AddPersistedFile(sessionId, targetValue, reader, writer);
                     break;
                 case RequestType.GetPersistedFile:
                     targetValue = reader.ReadString();
@@ -118,15 +121,15 @@ namespace RelayServerProtocol.Managers
                     break;
                 case RequestType.CheckIfPersistedFileChanged:
                     targetValue = reader.ReadString();
-                    writer.Write(ServerAccessManager.Instance.CheckIfPersistedFileChanged(sessionId, targetValue, reader, writer));
+                    writer.Write(serverAccessManager.CheckIfPersistedFileChanged(sessionId, targetValue, reader, writer));
                     break;
                 case RequestType.CheckIfFileExists:
                     targetValue = reader.ReadString();
-                    writer.Write(ServerAccessManager.Instance.CheckIfFileExists(sessionId, targetValue, reader, writer));
+                    writer.Write(serverAccessManager.CheckIfFileExists(sessionId, targetValue, reader, writer));
                     break;
                 case RequestType.BanUser:
                     targetValue = reader.ReadString();
-                    if (ServerAccessManager.Instance.BanSessionId(sessionId, targetValue))
+                    if (serverAccessManager.BanSessionId(sessionId, targetValue))
                     {
                         Console.WriteLine(sessionId + " banned " + targetValue);
                         writer.Write("Successfully banned " + targetValue);
@@ -141,38 +144,38 @@ namespace RelayServerProtocol.Managers
                     // User has a role above being a normal user.
                     if (authenticationData.Value > 0)
                     {
-                        writer.Write(ServerAccessManager.Instance.CreateNewUnclaimedAccessToken());
+                        writer.Write(serverAccessManager.CreateNewUnclaimedAccessToken());
                     }
                     break;
                 case RequestType.SetServerAlias:
-                    ServerAccessManager.Instance.SetServerAlias(reader.ReadString());
+                    serverAccessManager.SetServerAlias(reader.ReadString());
                     break;
                 case RequestType.SetServerRules:
-                    ServerAccessManager.Instance.SetServerRules(reader.ReadString());
+                    serverAccessManager.SetServerRules(reader.ReadString());
                     break;
                 case RequestType.SetServerDescription:
-                    ServerAccessManager.Instance.SetServerDescription(reader.ReadString());
+                    serverAccessManager.SetServerDescription(reader.ReadString());
                     break;
                 case RequestType.SetContentRating:
-                    ServerAccessManager.Instance.SetContentRating(reader.ReadInt32());
+                    serverAccessManager.SetContentRating(reader.ReadInt32());
                     break;
                 case RequestType.SetServerContentType:
-                    ServerAccessManager.Instance.SetServerContentType(reader.ReadInt32());
+                    serverAccessManager.SetServerContentType(reader.ReadInt32());
                     break;
                 case RequestType.SetAgeGroup:
-                    ServerAccessManager.Instance.SetAgeGroup(reader.ReadInt32());
+                    serverAccessManager.SetAgeGroup(reader.ReadInt32());
                     break;
                 case RequestType.SetUploadAllowance:
-                    ServerAccessManager.Instance.SetUploadAllowance((ServerUploadAllowance)reader.ReadInt32());
+                    serverAccessManager.SetUploadAllowance((ServerUploadAllowance)reader.ReadInt32());
                     break;
                 case RequestType.SetSynchronizationContext:
-                    ServerAccessManager.Instance.SetSyncronizationContext(reader.ReadString());
+                    serverAccessManager.SetSyncronizationContext(reader.ReadString());
                     break;
                 case RequestType.SetMaxFileSizeInMb:
-                    ServerAccessManager.Instance.SetMaxFileSizeInMb(reader.ReadInt32());
+                    serverAccessManager.SetMaxFileSizeInMb(reader.ReadInt32());
                     break;
                 case RequestType.SetGeneralUserLifespan:
-                    ServerAccessManager.Instance.SetGeneralUserLifespan(reader.ReadInt32());
+                    serverAccessManager.SetGeneralUserLifespan(reader.ReadInt32());
                     break;
 
             }
