@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using RelayCommonData;
 using RelayServerProtocol.Database;
-using System.IO;
 using static RelayUploadProtocol.Enums;
 
 namespace RelayServerProtocol.Managers

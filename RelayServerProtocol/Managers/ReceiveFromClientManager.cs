@@ -51,7 +51,7 @@ namespace RelayServerProtocol.Managers
         private void HandleRequestsNotRequiringAuthentication(string sessionId, int requestType, KeyValuePair<bool, ServerRole> authenticationData, BinaryReader reader, BinaryWriter writer)
         {
             // This data doesn't require authentication to access.
-            // This allows the client use to view what the server is all about before joining.
+            // This allows the client user to view what the server is all about before joining.
             switch ((RequestType)requestType)
             {
                 case RequestType.GetServerAlias:
