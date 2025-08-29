@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 using System.ComponentModel.DataAnnotations;
-using static RelayUploadProtocol.Structs;
+using static RelayUploadProtocol.Enums;
 
 namespace RelayServerProtocol.Database
 {
@@ -19,6 +19,8 @@ namespace RelayServerProtocol.Database
         AgeGroup _ageGroup;
         ServerContentRating _serverContentRating;
         ServerContentType _serverContentType;
+        ServerUploadAllowance _serverUploadAllowance;
+
         int _maxFileSizeInMb = 500;
         int _maxUsers = 20;
         int _generalUserLifeSpanInMilliseconds = -1;
@@ -41,5 +43,6 @@ namespace RelayServerProtocol.Database
         public int MaxFileSizeInMb { get => _maxFileSizeInMb; set => _maxFileSizeInMb = value; }
         public int MaxUsers { get => _maxUsers; set => _maxUsers = value; }
         public int GeneralUserLifeSpanInMilliseconds { get => _generalUserLifeSpanInMilliseconds; set => _generalUserLifeSpanInMilliseconds = value; }
+        public ServerUploadAllowance ServerUploadAllowance { get => _serverUploadAllowance; set => _serverUploadAllowance = value; }
     }
 }

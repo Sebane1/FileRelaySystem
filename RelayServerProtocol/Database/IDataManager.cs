@@ -1,5 +1,5 @@
 using RelayUploadProtocol;
-using static RelayUploadProtocol.Structs;
+using static RelayUploadProtocol.Enums;
 
 namespace RelayServerProtocol.Database
 {
@@ -30,5 +30,11 @@ namespace RelayServerProtocol.Database
         public void SetServerContentRating(ServerContentRating rating);
         public ServerContentType GetServerContentType();
         public void SetServerContentType(ServerContentType type);
+        int GetMaxFileSizeInMb();
+        void SetGeneralUserLifespan(int lifespan);
+        int GetGeneralUserLifespanInMilliseconds();
+        ServerUploadAllowance GetUploadAllowance();
+        void SetUploadAllowance(ServerUploadAllowance uploadAllowance);
+        void SetMaxFileSizeInMb(int setMaxFileSizeInMb);
     }
 }

@@ -1,6 +1,6 @@
 using Microsoft.VisualBasic.ApplicationServices;
 using RelayUploadProtocol;
-using static RelayUploadProtocol.Structs;
+using static RelayUploadProtocol.Enums;
 
 namespace ServerConfigurator
 {

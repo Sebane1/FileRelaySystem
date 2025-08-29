@@ -1,5 +1,5 @@
 using System.Text;
-using static RelayUploadProtocol.Structs;
+using static RelayUploadProtocol.Enums;
 
 namespace RelayUploadProtocol
 {

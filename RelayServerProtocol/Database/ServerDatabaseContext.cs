@@ -3,13 +3,13 @@ using System.ComponentModel.DataAnnotations;
 
 namespace RelayServerProtocol.Database
 {
-    public class ServerDatabasContext : DbContext
+    public class ServerDatabaseContext : DbContext
     {
         public DbSet<ServerData> ServerData { get; set; }
         public DbSet<PersistedSessionData> Sessions { get; set; }
         public DbSet<UnclaimedKey> UnclaimedKeys { get; set; }
 
-        public ServerDatabasContext(DbContextOptions<ServerDatabasContext> options)
+        public ServerDatabaseContext(DbContextOptions<ServerDatabaseContext> options)
             : base(options)
         {
             Database.EnsureCreated(); // auto-create schema if not exists

@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 using RelayCommonData;
 using RelayServerProtocol.Database;
 using System.IO;
-using static RelayUploadProtocol.Structs;
+using static RelayUploadProtocol.Enums;
 
 namespace RelayServerProtocol.Managers
 {
@@ -44,7 +44,7 @@ namespace RelayServerProtocol.Managers
                     return new JsonDataManager();
 
                 case DataStorageType.EntityFramework:
-                    var optionsBuilder = new DbContextOptionsBuilder<ServerDatabasContext>();
+                    var optionsBuilder = new DbContextOptionsBuilder<ServerDatabaseContext>();
 
                     // Pick based on config
                     var provider = dataStorageType.DatabaseProviderType;
@@ -70,8 +70,8 @@ namespace RelayServerProtocol.Managers
 
                     }
 
-                    var db = new ServerDatabasContext(optionsBuilder.Options);
-                    return new EntityFrameworkDataManager(db);
+                    var database = new ServerDatabaseContext(optionsBuilder.Options);
+                    return new EntityFrameworkDataManager(database);
             }
 
             return null;
@@ -110,7 +110,7 @@ namespace RelayServerProtocol.Managers
         }
 
 
-        public string GenerateUnclaimedAccessToken()
+        public string CreateNewUnclaimedAccessToken()
         {
             return _dataManager.CreateNewUnclaimedAccessToken();
         }
@@ -231,6 +231,46 @@ namespace RelayServerProtocol.Managers
             Directory.CreateDirectory(directory);
             var filePath = Path.Combine(directory, targetValue + ".hex");
             return File.Exists(filePath);
+        }
+
+        public ServerUploadAllowance GetUploadAllowance()
+        {
+            return _dataManager.GetUploadAllowance();
+        }
+
+        public string GetSynchronizationContext()
+        {
+            return _dataManager.GetSynchronizationContext();
+        }
+
+        public int GetMaxFileSizeInMb()
+        {
+            return _dataManager.GetMaxFileSizeInMb();
+        }
+
+        public void SetGeneralUserLifespan(int lifespan)
+        {
+            _dataManager.SetGeneralUserLifespan(lifespan);
+        }
+
+        public int GetGeneralUserLifespan()
+        {
+            return _dataManager.GetGeneralUserLifespanInMilliseconds();
+        }
+
+        public void SetUploadAllowance(ServerUploadAllowance uploadAllowance)
+        {
+            _dataManager.SetUploadAllowance(uploadAllowance);
+        }
+
+        public void SetSyncronizationContext(string synchronizationContext)
+        {
+            _dataManager.SetSynchronizationContext(synchronizationContext);
+        }
+
+        public void SetMaxFileSizeInMb(int maxFileSizeInMb)
+        {
+            _dataManager.SetMaxFileSizeInMb(maxFileSizeInMb);
         }
     }
 }

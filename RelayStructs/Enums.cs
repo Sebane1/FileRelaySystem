@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace RelayUploadProtocol
 {
-    public class Structs
+    public class Enums
     {
         public enum AgeGroup
         {
@@ -53,15 +53,15 @@ namespace RelayUploadProtocol
             SetAgeGroup = 18,
             GetContentRating = 19,
             SetContentRating = 20,
-            GetServerContent = 21,
+            GetServerContentType = 21,
             SetServerContentType = 22,
             GetSynchronizationContext = 23,
-            SetSynchronizationContext = 25,
-            GetMaxFileSizeInMb = 26,
-            SetMaxFileSizeInMb = 27,
-            GetGeneralUserLifespan = 28,
-            SetGeneralUserLifespan = 29,
-            GetPublicServerInfo = 28,
+            SetSynchronizationContext = 24,
+            GetMaxFileSizeInMb = 25,
+            SetMaxFileSizeInMb = 26,
+            GetGeneralUserLifespan = 27,
+            SetGeneralUserLifespan = 28,
+            GetPublicServerInfo = 29,
         }
     }
 }

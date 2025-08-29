@@ -2,6 +2,7 @@ using Newtonsoft.Json;
 using RelayCommonData;
 using RelayUploadProtocol;
 using System.Collections.Concurrent;
+using static RelayUploadProtocol.Enums;
 namespace RelayServerProtocol.Database
 {
     public class JsonDataManager : IDataManager
@@ -36,7 +37,7 @@ namespace RelayServerProtocol.Database
             return code;
         }
 
-        public Structs.AgeGroup GetAgeGroup()
+        public Enums.AgeGroup GetAgeGroup()
         {
             return _serverData.AgeGroup;
         }
@@ -60,12 +61,12 @@ namespace RelayServerProtocol.Database
             return null;
         }
 
-        public Structs.ServerContentRating GetServerContentRating()
+        public Enums.ServerContentRating GetServerContentRating()
         {
             return _serverData.ServerContentRating;
         }
 
-        public Structs.ServerContentType GetServerContentType()
+        public Enums.ServerContentType GetServerContentType()
         {
             return _serverData.ServerContentType;
         }
@@ -168,19 +169,19 @@ namespace RelayServerProtocol.Database
             PersistData();
         }
 
-        public void SetAgeGroup(Structs.AgeGroup group)
+        public void SetAgeGroup(Enums.AgeGroup group)
         {
             _serverData.AgeGroup = group;
             PersistData();
         }
 
-        public void SetServerContentRating(Structs.ServerContentRating rating)
+        public void SetServerContentRating(Enums.ServerContentRating rating)
         {
             _serverData.ServerContentRating = rating;
             PersistData();
         }
 
-        public void SetServerContentType(Structs.ServerContentType type)
+        public void SetServerContentType(Enums.ServerContentType type)
         {
             _serverData.ServerContentType = type;
             PersistData();
@@ -200,5 +201,41 @@ namespace RelayServerProtocol.Database
         {
             _serverData.ServerAlias = alias;
         }
+
+        public int GetMaxFileSizeInMb()
+        {
+            return _serverData.MaxFileSizeInMb;
+        }
+
+        public void SetGeneralUserLifespan(int lifespan)
+        {
+            _serverData.GeneralUserLifeSpanInMilliseconds = lifespan;
+        }
+
+        public int GetGeneralUserLifespanInMilliseconds()
+        {
+            return _serverData.GeneralUserLifeSpanInMilliseconds;
+        }
+
+        public ServerUploadAllowance GetUploadAllowance()
+        {
+            return _serverData.ServerUploadAllowance;
+        }
+
+        public void SetUploadAllowance(ServerUploadAllowance uploadAllowance)
+        {
+            _serverData.ServerUploadAllowance = uploadAllowance;
+        }
+
+        public void SetMaxFileSizeInMb(int setMaxFileSizeInMb)
+        {
+            _serverData.MaxFileSizeInMb = setMaxFileSizeInMb;
+        }
+
+        ServerUploadAllowance IDataManager.GetUploadAllowance()
+        {
+            return _serverData.ServerUploadAllowance;
+        }
+
     }
 }

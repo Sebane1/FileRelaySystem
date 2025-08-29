@@ -1,15 +1,16 @@
 using RelayCommonData;
 using RelayUploadProtocol;
-using static RelayServerProtocol.Database.ServerDatabasContext;
+using static RelayServerProtocol.Database.ServerDatabaseContext;
+using static RelayUploadProtocol.Enums;
 
 namespace RelayServerProtocol.Database
 {
     public class EntityFrameworkDataManager : IDataManager
     {
-        private readonly ServerDatabasContext _database;
+        private readonly ServerDatabaseContext _database;
 
         // Constructor takes connection string + provider
-        public EntityFrameworkDataManager(ServerDatabasContext serverDatabasContext)
+        public EntityFrameworkDataManager(ServerDatabaseContext serverDatabasContext)
         {
             _database = serverDatabasContext;
 
@@ -104,14 +105,14 @@ namespace RelayServerProtocol.Database
         }
 
         // ------------------ ServerData fields ------------------
-        public Structs.AgeGroup GetAgeGroup() => _database.ServerData.Find(1)?.AgeGroup ?? default;
-        public void SetAgeGroup(Structs.AgeGroup group) { _database.ServerData.Find(1).AgeGroup = group; _database.SaveChanges(); }
+        public AgeGroup GetAgeGroup() => _database.ServerData.Find(1)?.AgeGroup ?? default;
+        public void SetAgeGroup(AgeGroup group) { _database.ServerData.Find(1).AgeGroup = group; _database.SaveChanges(); }
 
-        public Structs.ServerContentRating GetServerContentRating() => _database.ServerData.Find(1)?.ServerContentRating ?? default;
-        public void SetServerContentRating(Structs.ServerContentRating rating) { _database.ServerData.Find(1).ServerContentRating = rating; _database.SaveChanges(); }
+        public ServerContentRating GetServerContentRating() => _database.ServerData.Find(1)?.ServerContentRating ?? default;
+        public void SetServerContentRating(ServerContentRating rating) { _database.ServerData.Find(1).ServerContentRating = rating; _database.SaveChanges(); }
 
-        public Structs.ServerContentType GetServerContentType() => _database.ServerData.Find(1)?.ServerContentType ?? default;
-        public void SetServerContentType(Structs.ServerContentType type) { _database.ServerData.Find(1).ServerContentType = type; _database.SaveChanges(); }
+        public ServerContentType GetServerContentType() => _database.ServerData.Find(1)?.ServerContentType ?? default;
+        public void SetServerContentType(ServerContentType type) { _database.ServerData.Find(1).ServerContentType = type; _database.SaveChanges(); }
 
         public string GetServerDescription() => _database.ServerData.Find(1)?.ServerDescription;
         public void SetServerDescription(string desc) { _database.ServerData.Find(1).ServerDescription = desc; _database.SaveChanges(); }
@@ -125,5 +126,35 @@ namespace RelayServerProtocol.Database
         public string GetServerAlias() => _database.ServerData.Find(1)?.ServerAlias;
 
         public void SetServerAlias(string alias) { _database.ServerData.Find(1).ServerAlias = alias; _database.SaveChanges(); }
+
+        public int GetMaxFileSizeInMb()
+        {
+            return _database.ServerData.Find(1).MaxFileSizeInMb;
+        }
+
+        public void SetGeneralUserLifespan(int lifespan)
+        {
+            _database.ServerData.Find(1).GeneralUserLifeSpanInMilliseconds = lifespan;
+        }
+
+        public int GetGeneralUserLifespanInMilliseconds()
+        {
+            return _database.ServerData.Find(1).GeneralUserLifeSpanInMilliseconds;
+        }
+
+        public ServerUploadAllowance GetUploadAllowance()
+        {
+            return _database.ServerData.Find(1).ServerUploadAllowance;
+        }
+
+        public void SetUploadAllowance(ServerUploadAllowance uploadAllowance)
+        {
+            _database.ServerData.Find(1).ServerUploadAllowance = uploadAllowance;
+        }
+
+        public void SetMaxFileSizeInMb(int setMaxFileSizeInMb)
+        {
+            _database.ServerData.Find(1).MaxFileSizeInMb = setMaxFileSizeInMb;
+        }
     }
 }

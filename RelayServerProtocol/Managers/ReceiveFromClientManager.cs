@@ -3,7 +3,7 @@ using RelayServerProtocol.Database;
 using RelayServerProtocol.TemporaryData;
 using System.Diagnostics;
 using System.Net;
-using static RelayUploadProtocol.Structs;
+using static RelayUploadProtocol.Enums;
 
 namespace RelayServerProtocol.Managers
 {
@@ -69,14 +69,27 @@ namespace RelayServerProtocol.Managers
                 case RequestType.GetContentRating:
                     writer.Write(ServerAccessManager.Instance.GetContentRating());
                     break;
-                case RequestType.GetServerContent:
+                case RequestType.GetServerContentType:
                     writer.Write(ServerAccessManager.Instance.GetServerContentType());
                     break;
                 case RequestType.GetPublicServerInfo:
                     writer.Write(ServerAccessManager.Instance.GetPublicServerInfo());
                     break;
+                case RequestType.GetUploadAllowance:
+                    writer.Write(ServerAccessManager.Instance.GetUploadAllowance());
+                    break;
+                case RequestType.GetSynchronizationContext:
+                    writer.Write(ServerAccessManager.Instance.GetSynchronizationContext());
+                    break;
+                case RequestType.GetMaxFileSizeInMb:
+                    writer.Write(ServerAccessManager.Instance.GetMaxFileSizeInMb());
+                    break;
+                case RequestType.GetGeneralUserLifespan:
+                    writer.Write(ServerAccessManager.Instance.GetGeneralUserLifespan());
+                    break;
                 default:
                     client.Response.StatusCode = 401;
+                    client.Response.Close();
                     break;
             }
         }
@@ -116,17 +129,19 @@ namespace RelayServerProtocol.Managers
                     if (ServerAccessManager.Instance.BanSessionId(sessionId, targetValue))
                     {
                         Console.WriteLine(sessionId + " banned " + targetValue);
+                        writer.Write("Successfully banned " + targetValue);
                     }
                     else
                     {
                         Console.WriteLine(sessionId + " has insufficient permissions to ban " + targetValue);
-                        writer.Write("Ban succeeded");
+                        writer.Write("Insufficient Permissions");
                     }
                     break;
                 case RequestType.IssueAccessToken:
+                    // User has a role above being a normal user.
                     if (authenticationData.Value > 0)
                     {
-                        writer.Write(ServerAccessManager.Instance.GenerateUnclaimedAccessToken());
+                        writer.Write(ServerAccessManager.Instance.CreateNewUnclaimedAccessToken());
                     }
                     break;
                 case RequestType.SetServerAlias:
@@ -146,6 +161,18 @@ namespace RelayServerProtocol.Managers
                     break;
                 case RequestType.SetAgeGroup:
                     ServerAccessManager.Instance.SetAgeGroup(reader.ReadInt32());
+                    break;
+                case RequestType.SetUploadAllowance:
+                    ServerAccessManager.Instance.SetUploadAllowance(reader.ReadInt32());
+                    break;
+                case RequestType.SetSynchronizationContext:
+                    ServerAccessManager.Instance.SetSyncronizationContext(reader.ReadString());
+                    break;
+                case RequestType.SetMaxFileSizeInMb:
+                    ServerAccessManager.Instance.SetMaxFileSizeInMb(reader.ReadInt32());
+                    break;
+                case RequestType.SetGeneralUserLifespan:
+                    ServerAccessManager.Instance.SetGeneralUserLifespan(reader.ReadInt32());
                     break;
 
             }
