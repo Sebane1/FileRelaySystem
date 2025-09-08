@@ -1,3 +1,6 @@
+using RelayClientProtocol;
+using System.Net;
+using System.Security.Cryptography;
 using System.Text;
 using static RelayUploadProtocol.Enums;
 
@@ -5,11 +8,8 @@ namespace RelayUploadProtocol
 {
     public static class ClientManager
     {
-        static string ipAddress = "localhost";
 
-        public static string IpAddress { get => ipAddress; set => ipAddress = value; }
-
-        public static async Task<string> GetTemporaryFile(string sessionId, string authenticationToken, string fileId, string outputFolder)
+        public static async Task<string> GetTemporaryFile(string ipAddress, string sessionId, string authenticationToken, string fileId, string outputFolder)
         {
             string serverUrl = "http://" + ipAddress + ":5105";
             int requestType = (int)RequestType.GetTemporaryFile;
@@ -57,7 +57,7 @@ namespace RelayUploadProtocol
             }
         }
 
-        public static async Task PutTemporaryFile(string sessionId, string authenticationToken, string fileId, string filePath, int destructionTime)
+        public static async Task PutTemporaryFile(string ipAddress, string sessionId, string authenticationToken, string fileId, string filePath, int destructionTime)
         {
             string serverUrl = "http://" + ipAddress + ":5105";
             int requestType = (int)RequestType.AddTemporaryFile;
@@ -100,114 +100,156 @@ namespace RelayUploadProtocol
             }
         }
 
-        public static async Task<string> GetPersistedFile(string sessionId, string authenticationToken, string fileId, string outputFolder)
+        public static async Task<string> GetPersistedFile(
+            string ipAddress,
+            string sessionId,
+            string authenticationToken,
+            string fileId,
+            string outputFolder,
+            string password)
         {
             string serverUrl = "http://" + ipAddress + ":5105";
             int requestType = (int)RequestType.GetPersistedFile;
 
-            using (var ms = new MemoryStream())
-            using (var writer = new BinaryWriter(ms, Encoding.UTF8, leaveOpen: true))
+            using var ms = new MemoryStream();
+            using var writer = new BinaryWriter(ms, Encoding.UTF8, leaveOpen: true);
+
+            writer.Write(sessionId);
+            writer.Write(authenticationToken);
+            writer.Write(requestType);
+            writer.Write(fileId);
+            writer.Flush();
+            ms.Position = 0;
+
+            using var client = new HttpClient();
+            var content = new StreamContent(ms);
+            content.Headers.Add("Content-Type", "application/octet-stream");
+
+            HttpResponseMessage response = await client.PostAsync(serverUrl, content);
+            response.EnsureSuccessStatusCode();
+
+            using var responseStream = await response.Content.ReadAsStreamAsync();
+
+            // Read salt + IV
+            byte[] salt = new byte[16];
+            byte[] iv = new byte[16];
+            await responseStream.ReadExactlyAsync(salt, 0, salt.Length);
+            await responseStream.ReadExactlyAsync(iv, 0, iv.Length);
+
+            // Derive key
+            byte[] key = CryptoUtils.DeriveKeyFromPassword(password, salt);
+
+            // Output file path
+            string outputPath = Path.Combine(outputFolder, fileId + ".bin");
+
+            // Decrypt while streaming to disk
+            using (var aes = Aes.Create())
             {
-                // Write protocol header (no file data in this case)
-                writer.Write(sessionId);
-                writer.Write(authenticationToken);
-                writer.Write(requestType);
-                writer.Write(fileId); // targetValue = file hash/ID
-                writer.Flush();
-                ms.Position = 0;
-
-                using (var client = new HttpClient())
-                {
-                    var content = new StreamContent(ms);
-                    content.Headers.Add("Content-Type", "application/octet-stream");
-
-                    HttpResponseMessage response = await client.PostAsync(serverUrl, content);
-                    response.EnsureSuccessStatusCode();
-
-                    // Save the response stream as a file
-                    string outputPath = Path.Combine(outputFolder, fileId + ".hex");
-                    using (var responseStream = await response.Content.ReadAsStreamAsync())
-                    using (var fileStream = new FileStream(outputPath, FileMode.Create, FileAccess.Write))
-                    {
-                        await responseStream.CopyToAsync(fileStream);
-                    }
-
-                    Console.WriteLine($"Downloaded {fileId} to {outputPath}");
-                    return outputPath;
-                }
+                aes.Key = key;
+                aes.IV = iv;
+                using var crypto = new CryptoStream(responseStream, aes.CreateDecryptor(), CryptoStreamMode.Read);
+                using var fsOut = new FileStream(outputPath, FileMode.Create, FileAccess.Write);
+                await crypto.CopyToAsync(fsOut);
             }
+
+            Console.WriteLine($"Downloaded {fileId} -> {outputPath}");
+            return outputPath;
         }
 
-
-        public static async Task PutPersistedFile(string sessionId, string authenticationToken, string fileId, string filePath)
+        public static async Task PutPersistedFile(
+            string ipAddress,
+            string sessionId,
+            string authenticationToken,
+            string fileId,
+            string filePath,
+            string password)
         {
             string serverUrl = "http://" + ipAddress + ":5105";
             int requestType = (int)RequestType.AddPersistedFile;
 
-            using (var ms = new MemoryStream())
-            using (var writer = new BinaryWriter(ms, Encoding.UTF8, leaveOpen: true))
+            byte[] salt = RandomNumberGenerator.GetBytes(16);
+            byte[] key = CryptoUtils.DeriveKeyFromPassword(password, salt);
+            using var aes = Aes.Create();
+            aes.Key = key;
+            aes.GenerateIV();
+
+            using var ms = new MemoryStream();
+            using var writer = new BinaryWriter(ms, Encoding.UTF8, leaveOpen: true);
+
+            // Write protocol header
+            writer.Write(sessionId);
+            writer.Write(authenticationToken);
+            writer.Write(requestType);
+            writer.Write(fileId);
+
+            // Reserve space for length (will fill later)
+            long lengthPosition = ms.Position;
+            writer.Write((long)0);
+
+            // Write salt + IV first
+            writer.Write(salt);
+            writer.Write(aes.IV);
+            writer.Flush();
+
+            // Encrypt file while streaming into the request body
+            using (var crypto = new CryptoStream(ms, aes.CreateEncryptor(), CryptoStreamMode.Write, leaveOpen: true))
+            using (var fsIn = new FileStream(filePath, FileMode.Open, FileAccess.Read))
             {
-                // Write protocol header
-                writer.Write(sessionId);
-                writer.Write(authenticationToken);
-                writer.Write(requestType);
-                writer.Write(fileId);
-
-                // Write file data
-                byte[] fileBytes = File.ReadAllBytes(filePath);
-                writer.Write((long)fileBytes.Length); // 64-bit length
-                writer.Write(fileBytes);
-
-                writer.Flush();
-                ms.Position = 0;
-
-                // Send raw stream
-                using (var client = new HttpClient())
-                {
-                    var content = new StreamContent(ms);
-                    content.Headers.Add("Content-Type", "application/octet-stream");
-
-                    HttpResponseMessage response = await client.PostAsync(serverUrl, content);
-
-                    Console.WriteLine($"Response: {response.StatusCode}");
-                    string respBody = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine(respBody);
-                }
+                await fsIn.CopyToAsync(crypto);
+                crypto.FlushFinalBlock();
             }
+
+            // Update payload length
+            long endPosition = ms.Position;
+            long payloadLength = endPosition - (lengthPosition + sizeof(long));
+            ms.Position = lengthPosition;
+            writer.Write(payloadLength);
+
+            // Reset position to start for sending
+            ms.Position = 0;
+
+            using var client = new HttpClient();
+            var content = new StreamContent(ms);
+            content.Headers.Add("Content-Type", "application/octet-stream");
+
+            HttpResponseMessage response = await client.PostAsync(serverUrl, content);
+            Console.WriteLine($"Response: {response.StatusCode}");
+            Console.WriteLine(await response.Content.ReadAsStringAsync());
         }
-        public static async Task<string> GetServerAlias(string sessionId)
+
+        public static async Task<string> GetServerAlias(string ipAddress, string sessionId)
         {
             int requestType = (int)RequestType.GetServerAlias;
-            return await GetServerInfo(sessionId, requestType);
+            return await GetServerInfo(ipAddress, sessionId, requestType);
         }
-        public static async Task<string> GetServerRules(string sessionId)
+        public static async Task<string> GetServerRules(string ipAddress, string sessionId)
         {
             int requestType = (int)RequestType.GetServerRules;
-            return await GetServerInfo(sessionId, requestType);
+            return await GetServerInfo(ipAddress, sessionId, requestType);
         }
-        public static async Task<string> GetServerDescription(string sessionId)
+        public static async Task<string> GetServerDescription(string ipAddress, string sessionId)
         {
             int requestType = (int)RequestType.GetServerDescription;
-            return await GetServerInfo(sessionId, requestType);
+            return await GetServerInfo(ipAddress, sessionId, requestType);
         }
-        public static async Task<bool> SetServerAlias(string sessionId, string authenticationToken, string alias)
+        public static async Task<bool> SetServerAlias(string ipAddress, string sessionId, string authenticationToken, string alias)
         {
             int requestType = (int)RequestType.SetServerAlias;
-            return await SetServerInfo(sessionId, authenticationToken, requestType, alias);
+            return await SetServerInfo(ipAddress, sessionId, authenticationToken, requestType, alias);
         }
-        public static async Task<bool> SetServerRules(string sessionId, string authenticationToken, string rules)
+        public static async Task<bool> SetServerRules(string ipAddress, string sessionId, string authenticationToken, string rules)
         {
             int requestType = (int)RequestType.SetServerRules;
-            return await SetServerInfo(sessionId, authenticationToken, requestType, rules);
+            return await SetServerInfo(ipAddress, sessionId, authenticationToken, requestType, rules);
         }
-        public static async Task<bool> SetServerDescription(string sessionId, string authenticationToken, string description)
+        public static async Task<bool> SetServerDescription(string ipAddress, string sessionId, string authenticationToken, string description)
         {
             int requestType = (int)RequestType.SetServerDescription;
-            return await SetServerInfo(sessionId, authenticationToken, requestType, description);
+            return await SetServerInfo(ipAddress, sessionId, authenticationToken, requestType, description);
         }
 
 
-        private static async Task<string> GetServerInfo(string sessionId, int requestType)
+        private static async Task<string> GetServerInfo(string ipAddress, string sessionId, int requestType)
         {
             string serverUrl = "http://" + ipAddress + ":5105";
             using (var ms = new MemoryStream())
@@ -234,7 +276,7 @@ namespace RelayUploadProtocol
                 }
             }
         }
-        private static async Task<bool> SetServerInfo(string sessionId, string authenticationToken, int requestType, string value)
+        private static async Task<bool> SetServerInfo(string ipAddress, string sessionId, string authenticationToken, int requestType, string value)
         {
             string serverUrl = "http://" + ipAddress + ":5105";
             using (var ms = new MemoryStream())
@@ -264,7 +306,7 @@ namespace RelayUploadProtocol
         }
 
 
-        private static async Task<bool> SetServerEnum(string sessionId, string authenticationToken, int requestType, int selectedIndex)
+        private static async Task<bool> SetServerEnum(string ipAddress, string sessionId, string authenticationToken, int requestType, int selectedIndex)
         {
             string serverUrl = "http://" + ipAddress + ":5105";
             using (var ms = new MemoryStream())
@@ -292,7 +334,7 @@ namespace RelayUploadProtocol
                 }
             }
         }
-        private static async Task<int> GetServerEnum(string sessionId, string authenticationToken, int requestType)
+        private static async Task<int> GetServerEnum(string ipAddress, string sessionId, string authenticationToken, int requestType)
         {
             string serverUrl = "http://" + ipAddress + ":5105";
             using (var ms = new MemoryStream())
@@ -322,34 +364,34 @@ namespace RelayUploadProtocol
                 }
             }
         }
-        public static async Task SetServerAgeGroup(string sessionId, string authenticationToken, int selectedIndex)
+        public static async Task SetServerAgeGroup(string ipAddress, string sessionId, string authenticationToken, int selectedIndex)
         {
-            await SetServerEnum(sessionId, authenticationToken, (int)RequestType.SetAgeGroup, selectedIndex);
+            await SetServerEnum(ipAddress, sessionId, authenticationToken, (int)RequestType.SetAgeGroup, selectedIndex);
         }
 
-        public static async Task SetServerContentRating(string sessionId, string authenticationToken, int selectedIndex)
+        public static async Task SetServerContentRating(string ipAddress, string sessionId, string authenticationToken, int selectedIndex)
         {
-            await SetServerEnum(sessionId, authenticationToken, (int)RequestType.SetContentRating, selectedIndex);
+            await SetServerEnum(ipAddress, sessionId, authenticationToken, (int)RequestType.SetContentRating, selectedIndex);
         }
 
-        public static async Task SetServerContentType(string sessionId, string authenticationToken, int selectedIndex)
+        public static async Task SetServerContentType(string ipAddress, string sessionId, string authenticationToken, int selectedIndex)
         {
-            await SetServerEnum(sessionId, authenticationToken, (int)RequestType.SetServerContentType, selectedIndex);
+            await SetServerEnum(ipAddress, sessionId, authenticationToken, (int)RequestType.SetServerContentType, selectedIndex);
         }
 
-        public static async Task<int> GetServerAgeGroup(string sessionId)
+        public static async Task<int> GetServerAgeGroup(string ipAddress, string sessionId)
         {
-            return await GetServerEnum(sessionId, "", (int)RequestType.GetAgeGroup);
+            return await GetServerEnum(ipAddress, sessionId, "", (int)RequestType.GetAgeGroup);
         }
 
-        public static async Task<int> GetServerContentRating(string sessionId)
+        public static async Task<int> GetServerContentRating(string ipAddress, string sessionId)
         {
-            return await GetServerEnum(sessionId, "", (int)RequestType.GetContentRating);
+            return await GetServerEnum(ipAddress, sessionId, "", (int)RequestType.GetContentRating);
         }
 
-        public static async Task<int> GetServerContentType(string sessionId)
+        public static async Task<int> GetServerContentType(string ipAddress, string sessionId)
         {
-            return await GetServerEnum(sessionId, "", (int)RequestType.SetServerContentType);
+            return await GetServerEnum(ipAddress, sessionId, "", (int)RequestType.SetServerContentType);
         }
     }
 }
