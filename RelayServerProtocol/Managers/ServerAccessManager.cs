@@ -86,20 +86,15 @@ namespace RelayServerProtocol.Managers
             else if (_dataManager.IsValidUnclaimedAuthenticationKeyHash(authenticationHash))
             {
                 _dataManager.CheckOrCreateSessionUser(sessionId);
+                _dataManager.SetSessionIdAccessTokenHash(sessionId, authenticationHash);
                 _dataManager.RemoveUnclaimedAuthenticationKeyHash(authenticationHash);
+                authenticationSuccess = true;
             }
 
             var persistedData = _dataManager.GetPersistedData(sessionId);
             if (!authenticationSuccess)
             {
-                if (_dataManager.IsValidUnclaimedAuthenticationKeyHash(sessionId))
-                {
-                    authenticationSuccess = persistedData.HashedAccessKey == authenticationHash;
-                }
-                else
-                {
-                    authenticationSuccess = false;
-                }
+                authenticationSuccess = persistedData.HashedAccessKey == authenticationHash;
             }
             return new KeyValuePair<bool, ServerRole>(authenticationSuccess, persistedData.ServerRole);
         }

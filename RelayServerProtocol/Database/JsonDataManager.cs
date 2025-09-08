@@ -242,5 +242,10 @@ namespace RelayServerProtocol.Database
             return _serverData.ServerUploadAllowance;
         }
 
+        public void SetSessionIdAccessTokenHash(string sessionId, string authenticationHash)
+        {
+            _serverData.PersistedSessionData[sessionId].HashedAccessKey = authenticationHash;
+            PersistData();
+        }
     }
 }

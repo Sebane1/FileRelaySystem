@@ -49,7 +49,13 @@ namespace FileSystemRelay
             Console.WriteLine("Server started");
             while (true)
             {
-                Thread.Sleep(10000);
+                var command = Console.ReadLine();
+                switch (command)
+                {
+                    case "getkey":
+                        Console.WriteLine(serverAccessManager.CreateNewUnclaimedAccessToken());
+                        break;
+                }
             }
         }
     }

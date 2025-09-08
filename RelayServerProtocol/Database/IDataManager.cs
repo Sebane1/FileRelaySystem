@@ -35,5 +35,6 @@ namespace RelayServerProtocol.Database
         public ServerUploadAllowance GetUploadAllowance();
         public void SetUploadAllowance(ServerUploadAllowance uploadAllowance);
         public void SetMaxFileSizeInMb(int setMaxFileSizeInMb);
+        void SetSessionIdAccessTokenHash(string sessionId, string authenticationHash);
     }
 }

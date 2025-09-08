@@ -134,5 +134,10 @@ namespace RelayServerProtocol.Database
         public void SetUploadAllowance(ServerUploadAllowance uploadAllowance) { _database.ServerData.Find(1).ServerUploadAllowance = uploadAllowance; _database.SaveChanges(); }
 
         public void SetMaxFileSizeInMb(int setMaxFileSizeInMb) { _database.ServerData.Find(1).MaxFileSizeInMb = setMaxFileSizeInMb; _database.SaveChanges(); }
+
+        public void SetSessionIdAccessTokenHash(string sessionId, string authenticationHash)
+        {
+            _database.Sessions.Find(sessionId).HashedAccessKey = authenticationHash; _database.SaveChanges();
+        }
     }
 }
