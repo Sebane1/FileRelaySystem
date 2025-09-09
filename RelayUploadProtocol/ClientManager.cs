@@ -142,7 +142,7 @@ namespace RelayUploadProtocol
             byte[] key = CryptoUtils.DeriveKeyFromPassword(password, salt);
 
             // Output file path
-            string outputPath = Path.Combine(outputFolder, fileId + ".bin");
+            string outputPath = Path.Combine(outputFolder, targetSessionId + fileId + ".bin");
 
             // Decrypt while streaming to disk
             using (var aes = Aes.Create())
