@@ -44,7 +44,7 @@ namespace RelayUploadProtocol
             ClearState = 2,
             AddPersistedFile = 3,
             GetPersistedFile = 4,
-            CheckIfPersistedFileChanged = 5,
+            CheckLastTimePersistedFileChanged = 5,
             CheckIfFileExists = 6,
             BanUser = 7,
             IssueAccessToken = 8,

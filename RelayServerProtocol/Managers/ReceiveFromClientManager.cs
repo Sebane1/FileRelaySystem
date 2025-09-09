@@ -102,41 +102,44 @@ namespace RelayServerProtocol.Managers
             switch ((RequestType)requestType)
             {
                 case RequestType.AddTemporaryFile:
-                    var targetValue = reader.ReadString();
-                    AddTemporaryFile(sessionId, targetValue, reader, writer);
-                    Console.WriteLine(sessionId + " received " + targetValue);
+                    var file = reader.ReadString();
+                    AddTemporaryFile(sessionId, file, reader, writer);
+                    Console.WriteLine(sessionId + " received " + file);
                     break;
                 case RequestType.GetTemporaryFile:
                 case RequestType.ClearState:
-                    targetValue = reader.ReadString();
-                    GetTemporaryFile(targetValue, writer, requestType);
+                    file = reader.ReadString();
+                    GetTemporaryFile(file, writer, requestType);
                     break;
                 case RequestType.AddPersistedFile:
-                    targetValue = reader.ReadString();
-                    serverAccessManager.AddPersistedFile(sessionId, targetValue, reader, writer);
+                    file = reader.ReadString();
+                    serverAccessManager.AddPersistedFile(sessionId, file, reader, writer);
                     break;
                 case RequestType.GetPersistedFile:
-                    targetValue = reader.ReadString();
-                    GetPersistedFile(targetValue, writer);
+                    var targetSessionId = reader.ReadString();
+                    file = reader.ReadString();
+                    GetPersistedFile(sessionId, targetSessionId, file, writer);
                     break;
-                case RequestType.CheckIfPersistedFileChanged:
-                    targetValue = reader.ReadString();
-                    writer.Write(serverAccessManager.CheckIfPersistedFileChanged(sessionId, targetValue, reader, writer));
+                case RequestType.CheckLastTimePersistedFileChanged:
+                    targetSessionId = reader.ReadString();
+                    file = reader.ReadString();
+                    writer.Write(serverAccessManager.CheckLastTimePersistedFileChanged(targetSessionId, file, reader, writer));
                     break;
                 case RequestType.CheckIfFileExists:
-                    targetValue = reader.ReadString();
-                    writer.Write(serverAccessManager.CheckIfFileExists(sessionId, targetValue, reader, writer));
+                    targetSessionId = reader.ReadString();
+                    file = reader.ReadString();
+                    writer.Write(serverAccessManager.CheckIfFileExists(targetSessionId, file, reader, writer));
                     break;
                 case RequestType.BanUser:
-                    targetValue = reader.ReadString();
-                    if (serverAccessManager.BanSessionId(sessionId, targetValue))
+                    targetSessionId = reader.ReadString();
+                    if (serverAccessManager.BanSessionId(sessionId, targetSessionId))
                     {
-                        Console.WriteLine(sessionId + " banned " + targetValue);
-                        writer.Write("Successfully banned " + targetValue);
+                        Console.WriteLine(sessionId + " banned " + targetSessionId);
+                        writer.Write("Successfully banned " + targetSessionId);
                     }
                     else
                     {
-                        Console.WriteLine(sessionId + " has insufficient permissions to ban " + targetValue);
+                        Console.WriteLine(sessionId + " has insufficient permissions to ban " + targetSessionId);
                         writer.Write("Insufficient Permissions");
                     }
                     break;
@@ -199,14 +202,14 @@ namespace RelayServerProtocol.Managers
             }
         }
 
-        private void GetPersistedFile(string hash, BinaryWriter writer)
+        private void GetPersistedFile(string sessionId, string targetSessionId, string file, BinaryWriter writer)
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-            Console.WriteLine("Client requesting " + hash);
+            Console.WriteLine(sessionId + " requesting " + file);
             try
             {
-                var filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cdn", hash + ".hex");
+                var filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cdn", targetSessionId + file + ".hex");
                 if (File.Exists(filePath))
                 {
                     using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
@@ -214,12 +217,12 @@ namespace RelayServerProtocol.Managers
                         CopyStream(fileStream, writer.BaseStream, (int)fileStream.Length);
                         writer.Flush();
                     }
-                    Console.WriteLine("Sent " + hash);
+                    Console.WriteLine("Sent " + file + " to " + sessionId);
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine("Connection interrupted for " + hash);
+                Console.WriteLine("Connection interrupted for " + file);
                 Console.WriteLine(e);
             }
         }

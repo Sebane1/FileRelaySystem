@@ -104,6 +104,7 @@ namespace RelayUploadProtocol
             string ipAddress,
             string sessionId,
             string authenticationToken,
+            string targetSessionId,
             string fileId,
             string outputFolder,
             string password)
@@ -117,6 +118,7 @@ namespace RelayUploadProtocol
             writer.Write(sessionId);
             writer.Write(authenticationToken);
             writer.Write(requestType);
+            writer.Write(targetSessionId);
             writer.Write(fileId);
             writer.Flush();
             ms.Position = 0;
@@ -364,6 +366,70 @@ namespace RelayUploadProtocol
                 }
             }
         }
+        private static async Task<bool> GetServerBool(string ipAddress, string sessionId, string authenticationToken, string fileId, int requestType)
+        {
+            string serverUrl = "http://" + ipAddress + ":5105";
+            using (var ms = new MemoryStream())
+            using (var writer = new BinaryWriter(ms, Encoding.UTF8, leaveOpen: true))
+            {
+                // Write protocol header
+                writer.Write(sessionId);
+                writer.Write(authenticationToken);
+                writer.Write(requestType);
+                writer.Write(fileId);
+
+                writer.Flush();
+                ms.Position = 0;
+
+                // Send raw stream
+                using (var client = new HttpClient())
+                {
+                    var content = new StreamContent(ms);
+                    content.Headers.Add("Content-Type", "application/octet-stream");
+
+                    HttpResponseMessage response = await client.PostAsync(serverUrl, content);
+
+                    Console.WriteLine($"Response: {response.StatusCode}");
+                    using (BinaryReader reader = new BinaryReader(response.Content.ReadAsStream()))
+                    {
+                        return reader.ReadBoolean();
+                    }
+                }
+            }
+        }
+        private static async Task<long> GetServerLong(string ipAddress, string sessionId, string authenticationToken, string targetSessionId, string fileId, int requestType)
+        {
+            string serverUrl = "http://" + ipAddress + ":5105";
+            using (var ms = new MemoryStream())
+            using (var writer = new BinaryWriter(ms, Encoding.UTF8, leaveOpen: true))
+            {
+                // Write protocol header
+                writer.Write(sessionId);
+                writer.Write(authenticationToken);
+                writer.Write(requestType);
+                writer.Write(targetSessionId);
+                writer.Write(fileId);
+
+                writer.Flush();
+                ms.Position = 0;
+
+                // Send raw stream
+                using (var client = new HttpClient())
+                {
+                    var content = new StreamContent(ms);
+                    content.Headers.Add("Content-Type", "application/octet-stream");
+
+                    HttpResponseMessage response = await client.PostAsync(serverUrl, content);
+
+                    Console.WriteLine($"Response: {response.StatusCode}");
+                    using (BinaryReader reader = new BinaryReader(response.Content.ReadAsStream()))
+                    {
+                        return reader.ReadInt64();
+                    }
+                }
+            }
+        }
+
         public static async Task SetServerAgeGroup(string ipAddress, string sessionId, string authenticationToken, int selectedIndex)
         {
             await SetServerEnum(ipAddress, sessionId, authenticationToken, (int)RequestType.SetAgeGroup, selectedIndex);
@@ -392,6 +458,11 @@ namespace RelayUploadProtocol
         public static async Task<int> GetServerContentType(string ipAddress, string sessionId)
         {
             return await GetServerEnum(ipAddress, sessionId, "", (int)RequestType.SetServerContentType);
+        }
+
+        public static async Task<long> CheckLastTimePersistedFileChanged(string ipAddress, string currentCharacterId, string authenticationKey, string targetCharacterId, string appearanceFile)
+        {
+            return await GetServerLong(ipAddress, currentCharacterId, authenticationKey, targetCharacterId, appearanceFile, (int)RequestType.CheckLastTimePersistedFileChanged);
         }
     }
 }

@@ -192,34 +192,37 @@ namespace RelayServerProtocol.Managers
             _dataManager.SetServerContentType((ServerContentType)serverContentType);
         }
 
-        public void AddPersistedFile(string sessionId, string targetValue, BinaryReader reader, BinaryWriter writer)
+        public void AddPersistedFile(string targetSessionId, string file, BinaryReader reader, BinaryWriter writer)
         {
             var length = reader.ReadInt64();
-            Console.WriteLine(sessionId + " uploading " + targetValue);
+            Console.WriteLine(targetSessionId + " uploading " + file);
             var directory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cdn");
             Directory.CreateDirectory(directory);
-            var filePath = Path.Combine(directory, targetValue + ".hex");
+            var filePath = Path.Combine(directory, targetSessionId + file + ".hex");
             using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
             {
                 CopyStream(reader.BaseStream, fileStream, (int)length);
             }
-            Console.WriteLine(sessionId + " persisted " + targetValue);
+            Console.WriteLine(targetSessionId + " persisted " + file);
         }
 
-        public bool CheckIfPersistedFileChanged(string sessionId, string targetValue, BinaryReader reader, BinaryWriter writer)
+        public long CheckLastTimePersistedFileChanged(string targetSessionId, string file, BinaryReader reader, BinaryWriter writer)
         {
             var directory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cdn");
             Directory.CreateDirectory(directory);
-            var filePath = Path.Combine(directory, targetValue + ".hex");
-            var dateTime = new DateTime(reader.ReadInt64());
-            return File.GetLastWriteTimeUtc(filePath) > dateTime;
+            var filePath = Path.Combine(directory, targetSessionId + file + ".hex");
+            if (File.Exists(filePath))
+            {
+                return File.GetLastWriteTimeUtc(filePath).Ticks;
+            }
+            return 0;
         }
 
-        public bool CheckIfFileExists(string sessionId, string targetValue, BinaryReader reader, BinaryWriter writer)
+        public bool CheckIfFileExists(string targetSessionId, string file, BinaryReader reader, BinaryWriter writer)
         {
             var directory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cdn");
             Directory.CreateDirectory(directory);
-            var filePath = Path.Combine(directory, targetValue + ".hex");
+            var filePath = Path.Combine(directory, targetSessionId + file + ".hex");
             return File.Exists(filePath);
         }
 
