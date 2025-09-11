@@ -1,14 +1,13 @@
 using RelayClientProtocol;
-using System.Net;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using static RelayUploadProtocol.Enums;
 
 namespace RelayUploadProtocol
 {
     public static class ClientManager
     {
-
         public static async Task<string> GetTemporaryFile(string ipAddress, string sessionId, string authenticationToken, string fileId, string outputFolder)
         {
             string serverUrl = "http://" + ipAddress + ":5105";

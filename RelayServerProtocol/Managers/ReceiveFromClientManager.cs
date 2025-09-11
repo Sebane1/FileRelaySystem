@@ -3,6 +3,7 @@ using RelayServerProtocol.Database;
 using RelayServerProtocol.TemporaryData;
 using System.Diagnostics;
 using System.Net;
+using System.Text;
 using static RelayUploadProtocol.Enums;
 
 namespace RelayServerProtocol.Managers
@@ -12,6 +13,23 @@ namespace RelayServerProtocol.Managers
         private HttpListenerContext client;
         private TemporaryFileManager fileManager;
         private ServerAccessManager serverAccessManager;
+        private class SseSubscriber
+        {
+            public StreamWriter Writer { get; }
+            public string SessionId { get; }
+            public HashSet<(string TargetSessionId, string File)> Filters { get; }
+
+            public SseSubscriber(StreamWriter writer, string sessionId)
+            {
+                Writer = writer;
+                SessionId = sessionId;
+                Filters = new HashSet<(string, string)>();
+            }
+
+        }
+
+        private static readonly List<SseSubscriber> _sseSubscribers = new();
+        private static readonly object _sseLock = new();
 
         public ReceiveFromClientManager(HttpListenerContext client, TemporaryFileManager fileManager, ServerAccessManager serverAccessManager)
         {
@@ -20,8 +38,167 @@ namespace RelayServerProtocol.Managers
             this.serverAccessManager = serverAccessManager;
         }
 
+        private static async Task BroadcastFileChanged(string targetSessionId, string file, long lastChanged)
+        {
+            List<SseSubscriber> subs;
+            lock (_sseLock) subs = _sseSubscribers.ToList();
+
+            foreach (var s in subs)
+            {
+                if (s.Filters.Contains((targetSessionId, file)))
+                {
+                    try
+                    {
+                        string payload = $"{targetSessionId}\r{file}\r{lastChanged}\n";
+                        await s.Writer.WriteAsync(payload);
+                        await s.Writer.FlushAsync();
+                    }
+                    catch
+                    {
+                        lock (_sseLock) _sseSubscribers.Remove(s);
+                    }
+                }
+            }
+        }
+
+
+
+        private async void HandleSse(HttpListenerContext ctx)
+        {
+            using var reader = new BinaryReader(ctx.Request.InputStream, Encoding.UTF8, leaveOpen: true);
+            ctx.Response.ContentType = "text/event-stream";
+            ctx.Response.Headers["Cache-Control"] = "no-cache";
+            ctx.Response.Headers["Connection"] = "keep-alive";
+
+            var writer = new StreamWriter(ctx.Response.OutputStream, Encoding.UTF8);
+            string sessionId = reader.ReadString();
+
+            // Initialize subscriber
+            var subscriber = new SseSubscriber(writer, sessionId);
+
+            int initialFilterCount = reader.ReadInt32();
+            var initialFilters = new List<(string TargetSessionId, string File)>();
+            for (int i = 0; i < initialFilterCount; i++)
+            {
+                string target = reader.ReadString();
+                string file = reader.ReadString();
+                initialFilters.Add((target, file));
+            }
+
+            subscriber.Filters.UnionWith(initialFilters);
+
+            lock (_sseLock)
+                _sseSubscribers.Add(subscriber);
+
+            var heartbeatTask = Task.Run(async () =>
+            {
+                while (ctx.Response.OutputStream.CanWrite)
+                {
+                    try
+                    {
+                        await writer.WriteLineAsync(":\n"); // SSE comment heartbeat
+                        await writer.FlushAsync();
+                    }
+                    catch { break; }
+                    await Task.Delay(TimeSpan.FromSeconds(15));
+                }
+            });
+
+            var filterListenTask = Task.Run(async () =>
+            {
+                try
+                {
+                    while (ctx.Response.OutputStream.CanWrite)
+                    {
+                        if (reader.BaseStream.CanRead && reader.BaseStream.Length > reader.BaseStream.Position)
+                        {
+                            byte command = reader.ReadByte();
+                            int count = reader.ReadInt32();
+                            var newFilters = new List<(string TargetSessionId, string File)>();
+                            for (int i = 0; i < count; i++)
+                            {
+                                string target = reader.ReadString();
+                                string file = reader.ReadString();
+                                newFilters.Add((target, file));
+                            }
+
+                            lock (_sseLock)
+                            {
+                                if (command == 0x01) // Subscribe
+                                    subscriber.Filters.UnionWith(newFilters);
+                                else if (command == 0x02) // Unsubscribe
+                                    foreach (var f in newFilters) subscriber.Filters.Remove(f);
+                            }
+                        }
+                        else
+                        {
+                            await Task.Delay(50); // avoid busy wait
+                        }
+                    }
+                }
+                catch { /* connection closed */ }
+            });
+
+            await Task.WhenAny(heartbeatTask, filterListenTask);
+
+            lock (_sseLock)
+                _sseSubscribers.Remove(subscriber);
+        }
+
+
+
         public void ReceiveFromClient()
         {
+            // SSE filter updates
+            if (client.Request.HttpMethod == "POST")
+            {
+                if (client.Request.Url.AbsolutePath.Equals("/sse/subscribe", StringComparison.OrdinalIgnoreCase))
+                {
+                    using var reader = new BinaryReader(client.Request.InputStream, Encoding.UTF8, leaveOpen: true);
+                    string sessionId = reader.ReadString();
+                    string target = reader.ReadString();
+                    string file = reader.ReadString();
+
+                    lock (_sseLock)
+                    {
+                        var sub = _sseSubscribers.FirstOrDefault(s => s.SessionId == sessionId);
+                        sub?.Filters.Add((target, file));
+                    }
+
+                    client.Response.StatusCode = 200;
+                    using var writer = new StreamWriter(client.Response.OutputStream);
+                    writer.Write("OK");
+                    writer.Flush();
+                    client.Response.Close();
+                    return;
+                }
+
+                if (client.Request.Url.AbsolutePath.Equals("/sse/unsubscribe", StringComparison.OrdinalIgnoreCase))
+                {
+                    using var reader = new BinaryReader(client.Request.InputStream, Encoding.UTF8, leaveOpen: true);
+                    string sessionId = reader.ReadString();
+                    string target = reader.ReadString();
+                    string file = reader.ReadString();
+
+                    lock (_sseLock)
+                    {
+                        var sub = _sseSubscribers.FirstOrDefault(s => s.SessionId == sessionId);
+                        sub?.Filters.Remove((target, file));
+                    }
+
+                    client.Response.StatusCode = 200;
+                    using var writer = new StreamWriter(client.Response.OutputStream);
+                    writer.Write("OK");
+                    writer.Flush();
+                    client.Response.Close();
+                    return;
+                }
+            }
+            if (client.Request.Url.AbsolutePath.Equals("/sse", StringComparison.OrdinalIgnoreCase))
+            {
+                HandleSse(client);
+                return;
+            }
             using (var reader = new BinaryReader(client.Request.InputStream))
             {
                 using (var writer = new BinaryWriter(client.Response.OutputStream))
@@ -75,9 +252,6 @@ namespace RelayServerProtocol.Managers
                 case RequestType.GetServerContentType:
                     writer.Write(serverAccessManager.GetServerContentType());
                     break;
-                case RequestType.GetPublicServerInfo:
-                    writer.Write(serverAccessManager.GetPublicServerInfo());
-                    break;
                 case RequestType.GetUploadAllowance:
                     writer.Write((int)serverAccessManager.GetUploadAllowance());
                     break;
@@ -90,6 +264,18 @@ namespace RelayServerProtocol.Managers
                 case RequestType.GetGeneralUserLifespan:
                     writer.Write(serverAccessManager.GetGeneralUserLifespan());
                     break;
+                case RequestType.GetPublicServerInfo:
+                    writer.Write(serverAccessManager.GetServerAlias());
+                    writer.Write(serverAccessManager.GetServerRules());
+                    writer.Write(serverAccessManager.GetServerDescription());
+                    writer.Write(serverAccessManager.GetAgeGroup());
+                    writer.Write(serverAccessManager.GetContentRating());
+                    writer.Write(serverAccessManager.GetServerContentType());
+                    writer.Write((int)serverAccessManager.GetUploadAllowance());
+                    writer.Write(serverAccessManager.GetSynchronizationContext());
+                    writer.Write(serverAccessManager.GetMaxFileSizeInMb());
+                    writer.Write(serverAccessManager.GetGeneralUserLifespan());
+                    break;
                 default:
                     client.Response.StatusCode = 401;
                     client.Response.Close();
@@ -97,7 +283,8 @@ namespace RelayServerProtocol.Managers
             }
         }
 
-        private void HandleRequestsRequiringAuthentication(string sessionId, int requestType, KeyValuePair<bool, ServerRole> authenticationData, BinaryReader reader, BinaryWriter writer)
+        private void HandleRequestsRequiringAuthentication(string sessionId, int requestType,
+            KeyValuePair<bool, ServerRole> authenticationData, BinaryReader reader, BinaryWriter writer)
         {
             switch ((RequestType)requestType)
             {
@@ -114,6 +301,9 @@ namespace RelayServerProtocol.Managers
                 case RequestType.AddPersistedFile:
                     file = reader.ReadString();
                     serverAccessManager.AddPersistedFile(sessionId, file, reader, writer);
+
+                    long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                    _ = BroadcastFileChanged(sessionId, file, now); // fire and forget
                     break;
                 case RequestType.GetPersistedFile:
                     var targetSessionId = reader.ReadString();

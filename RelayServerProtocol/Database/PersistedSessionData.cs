@@ -6,6 +6,8 @@ namespace RelayServerProtocol.Database {
         string _sessionUserId;
         string _hashedAccessKey;
         bool _banned;
+        long _utcJoinDate;
+        long _utcLastFileUpload;
         ServerRole _serverRole;
 
         /// <summary>
@@ -26,5 +28,7 @@ namespace RelayServerProtocol.Database {
         /// Defines what server actions the session user can access
         /// </summary>
         public ServerRole ServerRole { get => _serverRole; set => _serverRole = value; }
+        public long UtcJoinDate { get => _utcJoinDate; set => _utcJoinDate = value; }
+        public long UtcLastFileUpload { get => _utcLastFileUpload; set => _utcLastFileUpload = value; }
     }
 }
