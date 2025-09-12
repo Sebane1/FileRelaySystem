@@ -66,7 +66,7 @@ public class SseClient
         }
     }
 
-    public static async Task SubscribeAsync(string ipAddress, string sessionId, string authenticationToken, string targetSessionId, string file)
+    public static async Task<bool> SubscribeAsync(string ipAddress, string sessionId, string authenticationToken, string targetSessionId, string file)
     {
         try
         {
@@ -90,10 +90,11 @@ public class SseClient
 
             string respBody = await response.Content.ReadAsStringAsync();
             Console.WriteLine($"Subscribe response: {respBody}");
+            return true;
         }
         catch (Exception e)
         {
-
+            return false;
         }
     }
 
